@@ -29,7 +29,6 @@ impl PacketCapture {
     fn check_admin_privileges() -> Result<()> {
         #[cfg(windows)]
         {
-            use windows::Win32::Foundation::BOOL;
             use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
             use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
             
@@ -233,8 +232,14 @@ fn extract_tcp_payload(packet: &[u8]) -> Option<&[u8]> {
                     
                     // Get IP header length
                     let ip_header_len = match sliced.net {
-                        Some(etherparse::NetSlice::Ipv4(header)) => header.header_len(),
-                        Some(etherparse::NetSlice::Ipv6(_, _)) => 40, // IPv6 header is always 40 bytes
+                        Some(etherparse::NetSlice::Ipv4(header)) => {
+                            // Calculate IPv4 header length from IHL field
+                            header.ihl() as usize * 4
+                        }
+                        Some(etherparse::NetSlice::Ipv6(_)) => {
+                            // IPv6 header is always 40 bytes
+                            40
+                        }
                         None => return None,
                     };
                     
