@@ -314,25 +314,104 @@ impl PacketCapture {
         info!("📦 Game packet: type={:04X}, compressed={}, size={}", 
             packet.packet_type, packet.is_compressed, packet.size);
 
+        // アイテム名を検出
+        let item_names = Self::extract_japanese_strings(&packet.payload);
+        if !item_names.is_empty() {
+            info!("   🎁 Found {} potential item names:", item_names.len());
+            for (idx, name) in item_names.iter().take(20).enumerate() {
+                info!("      [{}] {}", idx + 1, name);
+            }
+            if item_names.len() > 20 {
+                info!("      ... and {} more", item_names.len() - 20);
+            }
+        }
+
         // パケットの最初の64バイトをダンプ
-        if packet.payload.len() > 0 {
+        if packet.payload.len() > 0 && item_names.is_empty() {
             let preview_len = packet.payload.len().min(64);
-            info!("   Payload preview ({} bytes):", packet.payload.len());
+            debug!("   Payload preview ({} bytes):", packet.payload.len());
             for (i, chunk) in packet.payload[..preview_len].chunks(16).enumerate() {
                 let hex: String = chunk.iter().map(|b| format!("{:02X} ", b)).collect();
                 let ascii: String = chunk.iter().map(|b| {
                     if *b >= 32 && *b <= 126 { *b as char } else { '.' }
                 }).collect();
-                info!("   {:04X}: {} | {}", i * 16, hex, ascii);
+                debug!("   {:04X}: {} | {}", i * 16, hex, ascii);
             }
             if packet.payload.len() > preview_len {
-                info!("   ... ({} more bytes)", packet.payload.len() - preview_len);
+                debug!("   ... ({} more bytes)", packet.payload.len() - preview_len);
             }
         }
 
         // TODO: Parse market-specific packets
         
         Ok(false)
+    }
+
+    /// Extract Japanese strings from payload (UTF-8)
+    fn extract_japanese_strings(payload: &[u8]) -> Vec<String> {
+        let mut strings = Vec::new();
+        let mut i = 0;
+
+        while i < payload.len() {
+            // 文字列の長さプレフィックスを探す（1バイトまたは2バイト）
+            // Protobufスタイル: length-prefixed strings
+            
+            // 最小3バイト必要（長さ1 + 最低2バイトの日本語文字）
+            if i + 3 >= payload.len() {
+                break;
+            }
+
+            // 1バイト長さプレフィックスを試す
+            let len = payload[i] as usize;
+            
+            // 妥当な文字列長かチェック（3-200文字）
+            if len >= 3 && len <= 200 && i + 1 + len <= payload.len() {
+                let string_bytes = &payload[i + 1..i + 1 + len];
+                
+                // UTF-8として解析を試みる
+                if let Ok(s) = std::str::from_utf8(string_bytes) {
+                    // 日本語文字（ひらがな、カタカナ、漢字）を含むかチェック
+                    if s.chars().any(|c| {
+                        ('\u{3040}'..='\u{309F}').contains(&c) || // ひらがな
+                        ('\u{30A0}'..='\u{30FF}').contains(&c) || // カタカナ
+                        ('\u{4E00}'..='\u{9FAF}').contains(&c)    // 漢字
+                    }) && s.chars().all(|c| !c.is_control()) {
+                        strings.push(s.to_string());
+                        i += 1 + len;
+                        continue;
+                    }
+                }
+            }
+
+            // 2バイト長さプレフィックス（big-endian）を試す
+            if i + 2 < payload.len() {
+                let len = u16::from_be_bytes([payload[i], payload[i + 1]]) as usize;
+                
+                if len >= 3 && len <= 200 && i + 2 + len <= payload.len() {
+                    let string_bytes = &payload[i + 2..i + 2 + len];
+                    
+                    if let Ok(s) = std::str::from_utf8(string_bytes) {
+                        if s.chars().any(|c| {
+                            ('\u{3040}'..='\u{309F}').contains(&c) ||
+                            ('\u{30A0}'..='\u{30FF}').contains(&c) ||
+                            ('\u{4E00}'..='\u{9FAF}').contains(&c)
+                        }) && s.chars().all(|c| !c.is_control()) {
+                            strings.push(s.to_string());
+                            i += 2 + len;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            i += 1;
+        }
+
+        // 重複を削除
+        strings.sort();
+        strings.dedup();
+        
+        strings
     }
 
     pub async fn stop(self) -> Result<()> {
