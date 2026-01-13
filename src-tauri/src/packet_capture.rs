@@ -22,10 +22,13 @@ impl PacketCapture {
         })
     }
 
+    pub fn get_running(&self) -> Arc<AtomicBool> {
+        Arc::clone(&self.running)
+    }
+
     fn check_admin_privileges() -> Result<()> {
         #[cfg(windows)]
         {
-            use std::ptr;
             use windows::Win32::Foundation::BOOL;
             use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
             use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
@@ -35,10 +38,10 @@ impl PacketCapture {
                 let process = GetCurrentProcess();
                 
                 if OpenProcessToken(process, TOKEN_QUERY, &mut token).is_err() {
-                    return Err(anyhow::anyhow!("プロセストークンの取得に失敗しました"));
+                    return Err(anyhow::anyhow!("Failed to get process token"));
                 }
                 
-                let mut elevation = TOKEN_ELEVATION { TokenIsElevated: BOOL(0) };
+                let mut elevation = TOKEN_ELEVATION { TokenIsElevated: 0 };
                 let mut return_length = 0u32;
                 
                 if GetTokenInformation(
@@ -48,12 +51,12 @@ impl PacketCapture {
                     std::mem::size_of::<TOKEN_ELEVATION>() as u32,
                     &mut return_length,
                 ).is_err() {
-                    return Err(anyhow::anyhow!("トークン情報の取得に失敗しました"));
+                    return Err(anyhow::anyhow!("Failed to get token information"));
                 }
                 
-                if elevation.TokenIsElevated.0 == 0 {
+                if elevation.TokenIsElevated == 0 {
                     return Err(anyhow::anyhow!(
-                        "管理者権限が必要です。アプリケーションを右クリックして「管理者として実行」してください。"
+                        "Administrator privileges required. Please right-click and select 'Run as administrator'."
                     ));
                 }
             }
@@ -62,19 +65,18 @@ impl PacketCapture {
         Ok(())
     }
 
-    pub async fn start(self, db: Arc<Mutex<Database>>) -> Result<()> {
+    pub async fn run_capture(running: Arc<AtomicBool>, db: Arc<Mutex<Database>>) -> Result<()> {
         // 管理者権限チェック
         Self::check_admin_privileges()
-            .context("管理者権限がありません")?;
+            .context("No administrator privileges")?;
 
-        self.running.store(true, Ordering::SeqCst);
-        info!("パケットキャプチャを開始します");
+        running.store(true, Ordering::SeqCst);
+        info!("Starting packet capture");
 
         // 別スレッドでキャプチャを実行（ブロッキング処理のため）
-        let running = Arc::clone(&self.running);
         tokio::task::spawn_blocking(move || {
             if let Err(e) = Self::capture_loop_blocking(running, db) {
-                error!("パケットキャプチャエラー: {}", e);
+                error!("Packet capture error: {}", e);
             }
         });
 
@@ -85,22 +87,22 @@ impl PacketCapture {
         running: Arc<AtomicBool>,
         db: Arc<Mutex<Database>>,
     ) -> Result<()> {
-        info!("WinDivertを初期化中...");
+        info!("Initializing WinDivert...");
         
-        // WinDivertフィルタ
-        // まずはすべてのTCPパケットをキャプチャ（後で特定のサーバーに絞る）
+        // WinDivert filter
+        // Capture all TCP packets first (later narrow down to specific servers)
         let filter = create_windivert_filter();
-        info!("フィルタ: {}", filter);
+        info!("Filter: {}", filter);
 
-        // WinDivertを開く（SNIFFモードでゲームに影響を与えない）
+        // Open WinDivert (SNIFF mode to not affect the game)
         let divert = WinDivert::open(
             &filter,
             WINDIVERT_LAYER_NETWORK,
             0,
             WINDIVERT_FLAG_SNIFF,
-        ).context("WinDivertの開始に失敗。管理者権限で実行していますか？")?;
+        ).context("Failed to start WinDivert. Are you running as administrator?")?;
 
-        info!("パケットキャプチャ開始。取引所を開いてください...");
+        info!("Packet capture started. Please open the market in game...");
 
         let parser = PacketParser::new();
         let mut buffer = vec![0u8; 65535];
@@ -108,46 +110,46 @@ impl PacketCapture {
         let mut market_packet_count = 0u64;
 
         loop {
-            // 停止フラグをチェック
+            // Check stop flag
             if !running.load(Ordering::SeqCst) {
-                info!("パケットキャプチャを停止します");
+                info!("Stopping packet capture");
                 break;
             }
 
-            // パケットを受信
+            // Receive packet
             let mut addr = WinDivertAddress::default();
             let recv_len = match divert.recv(&mut buffer, &mut addr) {
                 Ok(len) => len,
                 Err(e) => {
-                    warn!("パケット受信エラー: {}", e);
+                    warn!("Packet receive error: {}", e);
                     continue;
                 }
             };
 
             packet_count += 1;
             
-            // 100パケットごとにログ出力
+            // Log every 100 packets
             if packet_count % 100 == 0 {
-                debug!("受信パケット数: {}, 取引所パケット数: {}", packet_count, market_packet_count);
+                debug!("Packets received: {}, Market packets: {}", packet_count, market_packet_count);
             }
 
             let packet_data = &buffer[..recv_len];
 
-            // TCPペイロードを抽出
+            // Extract TCP payload
             let payload = match extract_tcp_payload(packet_data) {
                 Some(p) if !p.is_empty() => p,
                 _ => continue,
             };
 
-            // デバッグ: 最初の数バイトをログ出力
+            // Debug: log first few bytes
             if payload.len() >= 4 {
                 debug!(
-                    "ペイロード先頭: {:02X} {:02X} {:02X} {:02X} (長さ: {})",
+                    "Payload header: {:02X} {:02X} {:02X} {:02X} (length: {})",
                     payload[0], payload[1], payload[2], payload[3], payload.len()
                 );
             }
 
-            // パケットを解析
+            // Parse packet
             let raw_packet = RawPacketData {
                 timestamp: Utc::now(),
                 source_ip: String::new(),
@@ -160,32 +162,32 @@ impl PacketCapture {
             match parser.parse(&raw_packet) {
                 Ok(Some(market_packet)) => {
                     market_packet_count += 1;
-                    info!("取引所パケットを検出！ アイテム数: {}", market_packet.items.len());
+                    info!("Market packet detected! Items: {}", market_packet.items.len());
 
-                    // データベースに保存
+                    // Save to database
                     let db_clone = db.clone();
                     tokio::spawn(async move {
                         let db = db_clone.lock().await;
                         for item in market_packet.items {
                             if let Err(e) = db.insert_market_item(&item) {
-                                error!("アイテムの保存に失敗: {}", e);
+                                error!("Failed to save item: {}", e);
                             } else {
-                                info!("アイテムを保存: {} - {}G", item.name, item.price);
+                                info!("Item saved: {} - {}G", item.name, item.price);
                             }
                         }
                     });
                 }
                 Ok(None) => {
-                    // 取引所パケットではない
+                    // Not a market packet
                 }
                 Err(e) => {
-                    debug!("パケット解析エラー: {}", e);
+                    debug!("Packet parse error: {}", e);
                 }
             }
         }
 
         info!(
-            "パケットキャプチャ終了。総パケット数: {}, 取引所パケット数: {}",
+            "Packet capture ended. Total packets: {}, Market packets: {}",
             packet_count, market_packet_count
         );
 
@@ -194,7 +196,7 @@ impl PacketCapture {
 
     pub async fn stop(self) -> Result<()> {
         self.running.store(false, Ordering::SeqCst);
-        info!("パケットキャプチャの停止を要求しました");
+        info!("Packet capture stop requested");
         Ok(())
     }
 }
@@ -218,7 +220,7 @@ fn create_windivert_filter() -> String {
     "tcp".to_string()
 }
 
-/// TCPペイロードを抽出
+/// Extract TCP payload
 fn extract_tcp_payload(packet: &[u8]) -> Option<&[u8]> {
     use etherparse::SlicedPacket;
     
@@ -226,9 +228,17 @@ fn extract_tcp_payload(packet: &[u8]) -> Option<&[u8]> {
         Ok(sliced) => {
             if let Some(tcp) = sliced.transport {
                 if let etherparse::TransportSlice::Tcp(tcp_header) = tcp {
-                    // TCPヘッダーのサイズを計算
+                    // Calculate TCP header size
                     let tcp_header_len = tcp_header.data_offset() as usize * 4;
-                    let payload_offset = sliced.ip.unwrap().header_len() + tcp_header_len;
+                    
+                    // Get IP header length
+                    let ip_header_len = match sliced.net {
+                        Some(etherparse::NetSlice::Ipv4(header)) => header.header_len(),
+                        Some(etherparse::NetSlice::Ipv6(_, _)) => 40, // IPv6 header is always 40 bytes
+                        None => return None,
+                    };
+                    
+                    let payload_offset = ip_header_len + tcp_header_len;
                     
                     if payload_offset < packet.len() {
                         return Some(&packet[payload_offset..]);

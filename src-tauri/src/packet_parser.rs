@@ -1,6 +1,5 @@
 use crate::models::{MarketItem, MarketPacket, MarketPacketType, RawPacketData};
 use anyhow::{Context, Result};
-use chrono::Utc;
 use tracing::{debug, warn};
 
 pub struct PacketParser {
@@ -67,7 +66,7 @@ impl PacketParser {
         Ok(MarketPacketType::Unknown)
     }
 
-    fn parse_item_list(&self, payload: &[u8]) -> Result<Vec<MarketItem>> {
+    fn parse_item_list(&self, _payload: &[u8]) -> Result<Vec<MarketItem>> {
         // TODO: アイテムリストパケットの解析
         // 
         // 実装のヒント:
@@ -85,19 +84,19 @@ impl PacketParser {
         Ok(vec![])
     }
 
-    fn parse_item_detail(&self, payload: &[u8]) -> Result<Vec<MarketItem>> {
+    fn parse_item_detail(&self, _payload: &[u8]) -> Result<Vec<MarketItem>> {
         // TODO: アイテム詳細パケットの解析
         warn!("アイテム詳細の解析は未実装です");
         Ok(vec![])
     }
 
-    fn parse_price_update(&self, payload: &[u8]) -> Result<Vec<MarketItem>> {
+    fn parse_price_update(&self, _payload: &[u8]) -> Result<Vec<MarketItem>> {
         // TODO: 価格更新パケットの解析
         warn!("価格更新の解析は未実装です");
         Ok(vec![])
     }
 
-    fn parse_transaction_complete(&self, payload: &[u8]) -> Result<Vec<MarketItem>> {
+    fn parse_transaction_complete(&self, _payload: &[u8]) -> Result<Vec<MarketItem>> {
         // TODO: 取引完了パケットの解析
         warn!("取引完了の解析は未実装です");
         Ok(vec![])

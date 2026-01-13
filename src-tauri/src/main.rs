@@ -32,10 +32,11 @@ async fn start_packet_capture(state: State<'_, AppState>) -> Result<(), String> 
     match packet_capture::PacketCapture::new() {
         Ok(capture) => {
             let db = Arc::clone(&state.db);
+            let running = capture.get_running();
             
             // パケットキャプチャを別スレッドで開始
             tokio::spawn(async move {
-                if let Err(e) = capture.start(db).await {
+                if let Err(e) = packet_capture::PacketCapture::run_capture(running, db).await {
                     error!("パケットキャプチャエラー: {}", e);
                 }
             });

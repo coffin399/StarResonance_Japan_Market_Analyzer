@@ -3,7 +3,7 @@ use anyhow::{Context, Result};
 use chrono::{DateTime, Utc};
 use rusqlite::{params, Connection};
 use std::path::PathBuf;
-use tracing::{info, warn};
+use tracing::info;
 
 pub struct Database {
     conn: Connection,
