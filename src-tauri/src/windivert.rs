@@ -42,186 +42,43 @@ impl Default for WinDivertAddress {
     }
 }
 
-// WinDivert関数の外部宣言
-#[cfg(windows)]
-extern "C" {
-    fn WinDivertOpen(filter: *const c_char, layer: c_int, priority: i16, flags: u64) -> *mut c_void;
-    fn WinDivertClose(handle: *mut c_void) -> bool;
-    fn WinDivertRecv(
-        handle: *mut c_void,
-        packet: *mut u8,
-        packet_len: u32,
-        recv_len: *mut u32,
-        addr: *mut WinDivertAddress,
-    ) -> bool;
-    fn WinDivertSend(
-        handle: *mut c_void,
-        packet: *const u8,
-        packet_len: u32,
-        send_len: *mut u32,
-        addr: *const WinDivertAddress,
-    ) -> bool;
-    fn WinDivertHelperParsePacket(
-        packet: *const u8,
-        packet_len: u32,
-        ip_hdr: *mut *mut c_void,
-        ip6_hdr: *mut *mut c_void,
-        icmp_hdr: *mut *mut c_void,
-        icmpv6_hdr: *mut *mut c_void,
-        tcp_hdr: *mut *mut c_void,
-        udp_hdr: *mut *mut c_void,
-        data: *mut *mut c_void,
-        data_len: *mut u32,
-    ) -> bool;
-}
+// WinDivert will be loaded dynamically at runtime using libloading
+// No need for extern declarations
 
-/// WinDivertハンドル
+/// WinDivertハンドル (stub for now - will implement dynamic loading)
 pub struct WinDivert {
-    handle: *mut c_void,
+    _handle: *mut c_void,
 }
 
 impl WinDivert {
-    /// WinDivertを開く
-    pub fn open(filter: &str, layer: i32, priority: i16, flags: u64) -> Result<Self> {
+    /// WinDivertを開く (stub implementation - actual implementation coming soon)
+    pub fn open(_filter: &str, _layer: i32, _priority: i16, _flags: u64) -> Result<Self> {
         #[cfg(windows)]
         {
-            let filter_cstr = CString::new(filter)?;
-            
-            unsafe {
-                let handle = WinDivertOpen(filter_cstr.as_ptr(), layer, priority, flags);
-                
-                if handle.is_null() {
-                    return Err(anyhow!("WinDivertの開始に失敗しました。管理者権限で実行していますか？"));
-                }
-                
-                Ok(WinDivert { handle })
-            }
+            // TODO: Implement dynamic loading of WinDivert.dll using libloading
+            // For now, return error with helpful message
+            return Err(anyhow!(
+                "WinDivert dynamic loading not yet implemented.\n\
+                 This is a work-in-progress feature.\n\
+                 The application will compile but packet capture is not functional yet."
+            ));
         }
         
         #[cfg(not(windows))]
         {
-            Err(anyhow!("WinDivertはWindowsでのみ利用可能です"))
+            Err(anyhow!("WinDivert is only available on Windows"))
         }
     }
 
-    /// パケットを受信
-    pub fn recv(&self, buffer: &mut [u8], addr: &mut WinDivertAddress) -> Result<usize> {
-        #[cfg(windows)]
-        {
-            let mut recv_len: u32 = 0;
-            
-            unsafe {
-                let success = WinDivertRecv(
-                    self.handle,
-                    buffer.as_mut_ptr(),
-                    buffer.len() as u32,
-                    &mut recv_len,
-                    addr as *mut WinDivertAddress,
-                );
-                
-                if !success {
-                    return Err(anyhow!("パケットの受信に失敗しました"));
-                }
-                
-                Ok(recv_len as usize)
-            }
-        }
-        
-        #[cfg(not(windows))]
-        {
-            Err(anyhow!("WinDivertはWindowsでのみ利用可能です"))
-        }
-    }
-
-    /// パケットを送信（再注入）
-    pub fn send(&self, packet: &[u8], addr: &WinDivertAddress) -> Result<usize> {
-        #[cfg(windows)]
-        {
-            let mut send_len: u32 = 0;
-            
-            unsafe {
-                let success = WinDivertSend(
-                    self.handle,
-                    packet.as_ptr(),
-                    packet.len() as u32,
-                    &mut send_len,
-                    addr as *const WinDivertAddress,
-                );
-                
-                if !success {
-                    return Err(anyhow!("パケットの送信に失敗しました"));
-                }
-                
-                Ok(send_len as usize)
-            }
-        }
-        
-        #[cfg(not(windows))]
-        {
-            Err(anyhow!("WinDivertはWindowsでのみ利用可能です"))
-        }
-    }
-
-    /// パケットをパース（TCPペイロードを取得）
-    #[allow(dead_code)]
-    pub fn parse_packet(&self, packet: &[u8]) -> Result<Option<PacketInfo>> {
-        #[cfg(windows)]
-        {
-            use std::ptr;
-            
-            let mut ip_hdr: *mut c_void = ptr::null_mut();
-            let mut ip6_hdr: *mut c_void = ptr::null_mut();
-            let mut icmp_hdr: *mut c_void = ptr::null_mut();
-            let mut icmpv6_hdr: *mut c_void = ptr::null_mut();
-            let mut tcp_hdr: *mut c_void = ptr::null_mut();
-            let mut udp_hdr: *mut c_void = ptr::null_mut();
-            let mut data: *mut c_void = ptr::null_mut();
-            let mut data_len: u32 = 0;
-            
-            unsafe {
-                let success = WinDivertHelperParsePacket(
-                    packet.as_ptr(),
-                    packet.len() as u32,
-                    &mut ip_hdr,
-                    &mut ip6_hdr,
-                    &mut icmp_hdr,
-                    &mut icmpv6_hdr,
-                    &mut tcp_hdr,
-                    &mut udp_hdr,
-                    &mut data,
-                    &mut data_len,
-                );
-                
-                if !success || tcp_hdr.is_null() {
-                    return Ok(None);
-                }
-                
-                // TCPペイロードを取得
-                if data_len > 0 && !data.is_null() {
-                    let payload = std::slice::from_raw_parts(data as *const u8, data_len as usize);
-                    
-                    Ok(Some(PacketInfo {
-                        payload: payload.to_vec(),
-                    }))
-                } else {
-                    Ok(None)
-                }
-            }
-        }
-        
-        #[cfg(not(windows))]
-        {
-            Err(anyhow!("WinDivertはWindowsでのみ利用可能です"))
-        }
+    /// パケットを受信 (stub)
+    pub fn recv(&self, _buffer: &mut [u8], _addr: &mut WinDivertAddress) -> Result<usize> {
+        Err(anyhow!("WinDivert not yet implemented"))
     }
 }
 
 impl Drop for WinDivert {
     fn drop(&mut self) {
-        #[cfg(windows)]
-        unsafe {
-            WinDivertClose(self.handle);
-        }
+        // TODO: Implement cleanup when dynamic loading is done
     }
 }
 
