@@ -147,8 +147,8 @@ impl PacketCapture {
                 continue;
             };
 
-            let source_ip = ipv4.header().source();
-            let dest_ip = ipv4.header().destination();
+            let source_ip = Ipv4Addr::from(ipv4.header().source());
+            let dest_ip = Ipv4Addr::from(ipv4.header().destination());
             let source_port = tcp.source_port();
             let dest_port = tcp.destination_port();
             let tcp_payload = tcp.payload();
