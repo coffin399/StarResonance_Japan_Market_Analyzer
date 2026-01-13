@@ -7,6 +7,8 @@ mod database;
 mod models;
 mod windivert;
 mod windivert_loader;
+mod tcp_reassembler;
+mod game_packet;
 
 use database::Database;
 use models::{MarketItem, PriceHistory};
