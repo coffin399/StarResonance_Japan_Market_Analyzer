@@ -230,11 +230,11 @@ fn extract_tcp_payload(packet: &[u8]) -> Option<&[u8]> {
                     // Calculate TCP header size
                     let tcp_header_len = tcp_header.data_offset() as usize * 4;
                     
-                    // Get IP header length
+                    // Get IP header length from the slice
                     let ip_header_len = match sliced.net {
                         Some(etherparse::NetSlice::Ipv4(header)) => {
-                            // Calculate IPv4 header length from IHL field
-                            header.ihl() as usize * 4
+                            // Get slice length which includes the header
+                            header.slice().len()
                         }
                         Some(etherparse::NetSlice::Ipv6(_)) => {
                             // IPv6 header is always 40 bytes
