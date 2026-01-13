@@ -311,11 +311,26 @@ impl PacketCapture {
     fn process_game_packet(data: &[u8], _db: &Arc<Mutex<Database>>) -> Result<bool> {
         let packet = GamePacket::parse(data)?;
         
-        debug!("Game packet: type={:04X}, compressed={}, size={}", 
+        info!("📦 Game packet: type={:04X}, compressed={}, size={}", 
             packet.packet_type, packet.is_compressed, packet.size);
 
+        // パケットの最初の64バイトをダンプ
+        if packet.payload.len() > 0 {
+            let preview_len = packet.payload.len().min(64);
+            info!("   Payload preview ({} bytes):", packet.payload.len());
+            for (i, chunk) in packet.payload[..preview_len].chunks(16).enumerate() {
+                let hex: String = chunk.iter().map(|b| format!("{:02X} ", b)).collect();
+                let ascii: String = chunk.iter().map(|b| {
+                    if *b >= 32 && *b <= 126 { *b as char } else { '.' }
+                }).collect();
+                info!("   {:04X}: {} | {}", i * 16, hex, ascii);
+            }
+            if packet.payload.len() > preview_len {
+                info!("   ... ({} more bytes)", packet.payload.len() - preview_len);
+            }
+        }
+
         // TODO: Parse market-specific packets
-        // For now, just log the packet
         
         Ok(false)
     }
