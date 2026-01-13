@@ -3,8 +3,11 @@
 /// WinDivert C APIをRustから呼び出すためのFFIラッパー
 
 use std::ffi::CString;
-use std::os::raw::{c_char, c_int, c_void};
+use std::os::raw::{c_char, c_int, c_uint, c_void};
 use anyhow::{Result, anyhow};
+use libloading::{Library, Symbol};
+use once_cell::sync::OnceCell;
+use std::sync::Mutex;
 
 // WinDivertのフラグとパラメータ
 pub const WINDIVERT_FLAG_SNIFF: u64 = 1;
@@ -14,6 +17,27 @@ pub const WINDIVERT_FLAG_SEND_ONLY: u64 = 8;
 
 pub const WINDIVERT_LAYER_NETWORK: i32 = 0;
 pub const WINDIVERT_LAYER_NETWORK_FORWARD: i32 = 1;
+
+// WinDivert関数ポインタ型定義
+type WinDivertOpenFn = unsafe extern "C" fn(
+    filter: *const c_char,
+    layer: c_int,
+    priority: i16,
+    flags: u64,
+) -> *mut c_void;
+
+type WinDivertRecvFn = unsafe extern "C" fn(
+    handle: *mut c_void,
+    packet: *mut c_void,
+    packet_len: c_uint,
+    recv_len: *mut c_uint,
+    addr: *mut WinDivertAddress,
+) -> c_int;
+
+type WinDivertCloseFn = unsafe extern "C" fn(handle: *mut c_void) -> c_int;
+
+// グローバルなWinDivertライブラリインスタンス
+static WINDIVERT_LIB: OnceCell<Mutex<Library>> = OnceCell::new();
 
 // WinDivertAddress構造体
 #[repr(C)]
@@ -42,43 +66,109 @@ impl Default for WinDivertAddress {
     }
 }
 
-// WinDivert will be loaded dynamically at runtime using libloading
-// No need for extern declarations
+/// WinDivertライブラリをロード
+fn load_windivert_library() -> Result<&'static Mutex<Library>> {
+    WINDIVERT_LIB.get_or_try_init(|| {
+        let dll_path = crate::windivert_loader::get_windivert_path()?;
+        
+        unsafe {
+            let lib = Library::new(&dll_path)
+                .map_err(|e| anyhow!("Failed to load WinDivert DLL: {}", e))?;
+            
+            tracing::info!("WinDivert DLL loaded from: {}", dll_path.display());
+            Ok(Mutex::new(lib))
+        }
+    })
+}
 
-/// WinDivertハンドル (stub for now - will implement dynamic loading)
+/// WinDivertハンドル
 pub struct WinDivert {
-    _handle: *mut c_void,
+    handle: *mut c_void,
 }
 
 impl WinDivert {
-    /// WinDivertを開く (stub implementation - actual implementation coming soon)
-    pub fn open(_filter: &str, _layer: i32, _priority: i16, _flags: u64) -> Result<Self> {
-        #[cfg(windows)]
-        {
-            // TODO: Implement dynamic loading of WinDivert.dll using libloading
-            // For now, return error with helpful message
-            return Err(anyhow!(
-                "WinDivert dynamic loading not yet implemented.\n\
-                 This is a work-in-progress feature.\n\
-                 The application will compile but packet capture is not functional yet."
-            ));
-        }
-        
+    /// WinDivertを開く
+    pub fn open(filter: &str, layer: i32, priority: i16, flags: u64) -> Result<Self> {
         #[cfg(not(windows))]
         {
-            Err(anyhow!("WinDivert is only available on Windows"))
+            return Err(anyhow!("WinDivert is only available on Windows"));
+        }
+        
+        #[cfg(windows)]
+        {
+            let lib = load_windivert_library()?;
+            let lib_guard = lib.lock().unwrap();
+            
+            let filter_c = CString::new(filter)?;
+            
+            unsafe {
+                let open_fn: Symbol<WinDivertOpenFn> = lib_guard
+                    .get(b"WinDivertOpen")
+                    .map_err(|e| anyhow!("Failed to get WinDivertOpen: {}", e))?;
+                
+                let handle = open_fn(
+                    filter_c.as_ptr(),
+                    layer,
+                    priority,
+                    flags,
+                );
+                
+                if handle.is_null() {
+                    return Err(anyhow!(
+                        "WinDivertOpen failed. Make sure:\n\
+                         1. You are running as administrator\n\
+                         2. WinDivert64.sys is in the same directory as WinDivert64.dll\n\
+                         3. Windows version is compatible (Windows 7+)"
+                    ));
+                }
+                
+                tracing::info!("WinDivert opened successfully with filter: {}", filter);
+                
+                Ok(WinDivert { handle })
+            }
         }
     }
 
-    /// パケットを受信 (stub)
-    pub fn recv(&self, _buffer: &mut [u8], _addr: &mut WinDivertAddress) -> Result<usize> {
-        Err(anyhow!("WinDivert not yet implemented"))
+    /// パケットを受信
+    pub fn recv(&self, buffer: &mut [u8], addr: &mut WinDivertAddress) -> Result<usize> {
+        let lib = load_windivert_library()?;
+        let lib_guard = lib.lock().unwrap();
+        
+        unsafe {
+            let recv_fn: Symbol<WinDivertRecvFn> = lib_guard
+                .get(b"WinDivertRecv")
+                .map_err(|e| anyhow!("Failed to get WinDivertRecv: {}", e))?;
+            
+            let mut recv_len: c_uint = 0;
+            let result = recv_fn(
+                self.handle,
+                buffer.as_mut_ptr() as *mut c_void,
+                buffer.len() as c_uint,
+                &mut recv_len,
+                addr as *mut WinDivertAddress,
+            );
+            
+            if result == 0 {
+                return Err(anyhow!("WinDivertRecv failed"));
+            }
+            
+            Ok(recv_len as usize)
+        }
     }
 }
 
 impl Drop for WinDivert {
     fn drop(&mut self) {
-        // TODO: Implement cleanup when dynamic loading is done
+        if let Ok(lib) = load_windivert_library() {
+            let lib_guard = lib.lock().unwrap();
+            
+            unsafe {
+                if let Ok(close_fn) = lib_guard.get::<Symbol<WinDivertCloseFn>>(b"WinDivertClose") {
+                    close_fn(self.handle);
+                    tracing::info!("WinDivert handle closed");
+                }
+            }
+        }
     }
 }
 

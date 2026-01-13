@@ -8,6 +8,10 @@ mod models;
 mod windivert;
 mod windivert_loader;
 
+use database::Database;
+use models::{MarketItem, PriceHistory};
+use packet_capture::PacketCapture;
+
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tauri::State;
@@ -68,10 +72,48 @@ async fn stop_packet_capture(state: State<'_, AppState>) -> Result<(), String> {
 }
 
 #[tauri::command]
-async fn get_market_data(state: State<'_, AppState>) -> Result<Vec<models::MarketItem>, String> {
+async fn get_market_data(state: State<'_, AppState>) -> Result<Vec<MarketItem>, String> {
     let db = state.db.lock().await;
     db.get_recent_market_data(100)
         .map_err(|e| format!("データベースエラー: {}", e))
+}
+
+#[tauri::command]
+fn check_admin() -> Result<bool, String> {
+    #[cfg(windows)]
+    {
+        use windows::Win32::Security::{GetTokenInformation, TokenElevation, TOKEN_ELEVATION, TOKEN_QUERY};
+        use windows::Win32::System::Threading::{GetCurrentProcess, OpenProcessToken};
+        
+        unsafe {
+            let mut token = windows::Win32::Foundation::HANDLE::default();
+            let process = GetCurrentProcess();
+            
+            if OpenProcessToken(process, TOKEN_QUERY, &mut token).is_err() {
+                return Ok(false);
+            }
+            
+            let mut elevation = TOKEN_ELEVATION { TokenIsElevated: 0 };
+            let mut return_length = 0u32;
+            
+            if GetTokenInformation(
+                token,
+                TokenElevation,
+                Some(&mut elevation as *mut _ as *mut _),
+                std::mem::size_of::<TOKEN_ELEVATION>() as u32,
+                &mut return_length,
+            ).is_err() {
+                return Ok(false);
+            }
+            
+            Ok(elevation.TokenIsElevated != 0)
+        }
+    }
+    
+    #[cfg(not(windows))]
+    {
+        Ok(false)
+    }
 }
 
 #[tauri::command]
@@ -125,6 +167,7 @@ fn main() {
             get_market_data,
             get_item_history,
             clear_database,
+            check_admin,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

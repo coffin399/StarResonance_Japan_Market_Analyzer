@@ -105,6 +105,10 @@ impl Database {
         Ok(())
     }
 
+    pub fn get_recent_items(&self, limit: usize) -> Result<Vec<MarketItem>> {
+        self.get_recent_market_data(limit)
+    }
+
     pub fn get_recent_market_data(&self, limit: usize) -> Result<Vec<MarketItem>> {
         let mut stmt = self.conn.prepare(
             "SELECT id, name, price, quantity, seller_name, category, rarity, updated_at
@@ -163,6 +167,10 @@ impl Database {
             .collect::<Result<Vec<_>, _>>()?;
 
         Ok(history)
+    }
+
+    pub fn clear_all(&self) -> Result<()> {
+        self.clear_all_data()
     }
 
     pub fn clear_all_data(&self) -> Result<()> {

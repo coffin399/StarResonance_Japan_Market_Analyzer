@@ -37,7 +37,20 @@
 		}
 	}
 
-	onMount(() => {
+	async function checkAdminStatus() {
+		try {
+			const isAdminUser = await invoke('check_admin');
+			if (!isAdminUser) {
+				status = '⚠️ 管理者権限が必要です';
+			}
+		} catch (error) {
+			console.error('Failed to check admin:', error);
+		}
+	}
+
+	onMount(async () => {
+		await checkAdminStatus();
+		await loadMarketData();
 		status = '準備完了';
 		// 定期的にデータを更新
 		const interval = setInterval(loadMarketData, 5000);
@@ -156,8 +169,9 @@
 	}
 
 	.subtitle {
-		color: #666;
+		color: #718096;
 		margin-top: 0.5rem;
+		font-size: 1rem;
 	}
 
 	.control-panel {
@@ -176,6 +190,8 @@
 		align-items: center;
 		gap: 0.5rem;
 		font-weight: 500;
+		color: #2d3748;
+		font-size: 1rem;
 	}
 
 	.status-indicator {
@@ -248,16 +264,19 @@
 	.info-card h3 {
 		margin: 0 0 1rem 0;
 		font-size: 1.25rem;
+		color: #2d3748;
 	}
 
 	.info-card ul, .info-card ol {
 		margin: 0;
 		padding-left: 1.5rem;
+		color: #4a5568;
 	}
 
 	.info-card li {
 		margin-bottom: 0.5rem;
 		line-height: 1.6;
+		color: #4a5568;
 	}
 
 	.market-data {
@@ -303,15 +322,34 @@
 	.empty-state {
 		text-align: center;
 		padding: 4rem 2rem;
-		color: #666;
+		color: #4a5568;
 	}
 
 	.empty-state p {
 		margin: 0.5rem 0;
+		font-size: 1.1rem;
+		color: #2d3748;
 	}
 
 	.empty-state .hint {
 		font-size: 0.9rem;
-		color: #999;
+		color: #718096;
+		margin-bottom: 1.5rem;
+	}
+
+	.secondary-button {
+		background: #e2e8f0;
+		color: #4a5568;
+		border: none;
+		padding: 0.75rem 1.5rem;
+		border-radius: 8px;
+		font-size: 0.95rem;
+		font-weight: 500;
+		cursor: pointer;
+		transition: all 0.2s ease;
+	}
+
+	.secondary-button:hover {
+		background: #cbd5e0;
 	}
 </style>
