@@ -98,7 +98,27 @@ GNU Affero General Public License v3.0 (AGPL-3.0)
 
 詳細: [QUICKSTART.md](QUICKSTART.md)
 
-### 開発者向け
+### 開発者向け（Windows）⭐ おすすめ
+
+**バッチファイルで簡単起動！**
+
+```batch
+# 1. リポジトリをクローン
+git clone https://github.com/yourusername/StarResonance_Japan_Market_Analyzer.git
+cd StarResonance_Japan_Market_Analyzer
+
+# 2. ダブルクリックで起動（自動的に管理者権限に昇格）
+start-dev-auto-admin.bat
+```
+
+その他の便利なバッチファイル:
+- `build.bat` - リリースビルド
+- `run.bat` - ビルド済みアプリを実行
+- `clean.bat` - キャッシュクリア
+
+詳細: [BATCH_SCRIPTS.md](BATCH_SCRIPTS.md)
+
+### 開発者向け（手動）
 
 ```bash
 # リポジトリのクローン
@@ -108,7 +128,7 @@ cd StarResonance_Japan_Market_Analyzer
 # 依存関係のインストール
 npm install
 
-# 開発モードで起動
+# 開発モードで起動（管理者権限が必要）
 npm run tauri dev
 
 # ビルド
