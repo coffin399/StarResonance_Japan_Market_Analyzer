@@ -73,15 +73,24 @@ impl TCPReassembler {
             self.data[3],
         ]) as usize;
 
+        // デバッグ: 最初の数回だけログ
+        static mut LOG_COUNT: u32 = 0;
+        unsafe {
+            if LOG_COUNT < 5 {
+                tracing::info!("extract_packet attempt: packet_size={}, data_len={}", packet_size, self.data.len());
+                LOG_COUNT += 1;
+            }
+        }
+
         // パケットサイズの妥当性チェック
         if packet_size < 6 {
-            tracing::warn!("Invalid packet_size: {} (too small), clearing buffer", packet_size);
+            tracing::warn!("Invalid packet_size: {} (too small), clearing {} bytes", packet_size, self.data.len());
             self.data.clear();
             return None;
         }
         
         if packet_size > 1024 * 1024 {
-            tracing::warn!("Invalid packet_size: {} (too large), clearing buffer", packet_size);
+            tracing::warn!("Invalid packet_size: {} (too large), clearing {} bytes", packet_size, self.data.len());
             self.data.clear();
             return None;
         }

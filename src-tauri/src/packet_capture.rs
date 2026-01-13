@@ -211,7 +211,13 @@ impl PacketCapture {
 
             // Add to TCP reassembler
             tcp_reassembler.add_packet(seq_number, tcp_payload.to_vec());
-            tcp_reassembler.reassemble();
+            let reassembled = tcp_reassembler.reassemble();
+            
+            // デバッグ: 再組立の状態を確認
+            if packet_count % 1000 == 0 && tcp_reassembler.data.len() > 0 {
+                debug!("TCP reassembler status: data_len={}, cache_size={}", 
+                    tcp_reassembler.data.len(), tcp_reassembler.cache.len());
+            }
 
             // Extract complete packets
             while let Some(packet_data) = tcp_reassembler.extract_packet() {
