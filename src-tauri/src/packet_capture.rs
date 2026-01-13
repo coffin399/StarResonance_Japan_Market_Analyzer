@@ -225,28 +225,13 @@ fn extract_tcp_payload(packet: &[u8]) -> Option<&[u8]> {
     
     match SlicedPacket::from_ip(packet) {
         Ok(sliced) => {
-            if let Some(tcp) = sliced.transport {
-                if let etherparse::TransportSlice::Tcp(tcp_header) = tcp {
-                    // Calculate TCP header size
-                    let tcp_header_len = tcp_header.data_offset() as usize * 4;
-                    
-                    // Get IP header length from the slice
-                    let ip_header_len = match sliced.net {
-                        Some(etherparse::NetSlice::Ipv4(header)) => {
-                            // Get slice length which includes the header
-                            header.slice().len()
-                        }
-                        Some(etherparse::NetSlice::Ipv6(_)) => {
-                            // IPv6 header is always 40 bytes
-                            40
-                        }
-                        None => return None,
-                    };
-                    
-                    let payload_offset = ip_header_len + tcp_header_len;
-                    
-                    if payload_offset < packet.len() {
-                        return Some(&packet[payload_offset..]);
+            // etherparse automatically extracts the payload
+            // Check if we have TCP transport layer
+            if let Some(etherparse::TransportSlice::Tcp(_)) = sliced.transport {
+                // Return the payload if it exists
+                if let Some(payload) = sliced.payload.payload {
+                    if !payload.is_empty() {
+                        return Some(payload);
                     }
                 }
             }
