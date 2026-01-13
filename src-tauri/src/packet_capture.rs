@@ -178,22 +178,38 @@ impl PacketCapture {
 
             // Try to identify game server
             if known_server != Some(current_server) {
-                // Method 1: Check for game server signature
-                if Self::check_game_signature(tcp_payload) {
-                    info!("Game server detected (by signature): {}:{} -> {}:{}", 
-                        source_ip, source_port, dest_ip, dest_port);
-                    known_server = Some(current_server);
-                    tcp_reassembler.clear(seq_number + tcp_payload.len());
-                    continue;
-                }
+                // ペイロードがある場合のみチェック
+                if !tcp_payload.is_empty() {
+                    // 定期的にサンプルパケットをログ出力
+                    if packet_count % 500 == 0 {
+                        debug!("Sample packet: {}:{} -> {}:{}, payload_len={}", 
+                            source_ip, source_port, dest_ip, dest_port, tcp_payload.len());
+                        if tcp_payload.len() >= 16 {
+                            let preview: Vec<String> = tcp_payload[..16.min(tcp_payload.len())]
+                                .iter()
+                                .map(|b| format!("{:02X}", b))
+                                .collect();
+                            debug!("  Payload preview: {}", preview.join(" "));
+                        }
+                    }
+                    
+                    // Method 1: Check for game server signature
+                    if Self::check_game_signature(tcp_payload) {
+                        info!("🎮 Game server detected (by signature): {}:{} -> {}:{}", 
+                            source_ip, source_port, dest_ip, dest_port);
+                        known_server = Some(current_server);
+                        tcp_reassembler.clear(seq_number + tcp_payload.len());
+                        continue;
+                    }
 
-                // Method 2: Check for login packet
-                if Self::check_login_packet(tcp_payload) {
-                    info!("Game server detected (by login): {}:{} -> {}:{}", 
-                        source_ip, source_port, dest_ip, dest_port);
-                    known_server = Some(current_server);
-                    tcp_reassembler.clear(seq_number + tcp_payload.len());
-                    continue;
+                    // Method 2: Check for login packet
+                    if Self::check_login_packet(tcp_payload) {
+                        info!("🎮 Game server detected (by login): {}:{} -> {}:{}", 
+                            source_ip, source_port, dest_ip, dest_port);
+                        known_server = Some(current_server);
+                        tcp_reassembler.clear(seq_number + tcp_payload.len());
+                        continue;
+                    }
                 }
 
                 continue;
@@ -240,42 +256,51 @@ impl PacketCapture {
             return false;
         }
 
-        // Check for fragmentated packet structure
-        if payload[4] != 0 {
-            return false;
-        }
+        // BPSR Logsの実装を完全に再現
+        // パケットの最初の4バイトをチェック
+        if payload.len() >= 10 {
+            let first_10 = &payload[..10];
+            
+            // パケット構造: [length:4][type:2][...]
+            // payload[4] が 0 の場合は特定のパケットタイプ
+            if first_10[4] == 0 {
+                let mut offset = 0;
+                let mut iteration = 0;
+                
+                while offset + 4 <= payload.len() {
+                    iteration += 1;
+                    if iteration > 1000 {
+                        break; // Prevent infinite loop
+                    }
 
-        let mut offset = 0;
-        while offset + 4 <= payload.len() {
-            if offset > 1000 {
-                break; // Prevent infinite loop
+                    let frag_len = u32::from_le_bytes([
+                        payload[offset],
+                        payload[offset + 1],
+                        payload[offset + 2],
+                        payload[offset + 3],
+                    ]) as usize;
+
+                    if frag_len < 4 {
+                        break;
+                    }
+
+                    let payload_len = frag_len.saturating_sub(4);
+                    offset += 4;
+
+                    if offset + payload_len > payload.len() {
+                        break;
+                    }
+
+                    let fragment = &payload[offset..offset + payload_len];
+                    if fragment.len() >= 5 + GAME_SERVER_SIGNATURE.len() 
+                        && fragment[5..5 + GAME_SERVER_SIGNATURE.len()] == GAME_SERVER_SIGNATURE {
+                        debug!("✅ Game signature found at offset {}", offset);
+                        return true;
+                    }
+
+                    offset += payload_len;
+                }
             }
-
-            let frag_len = u32::from_le_bytes([
-                payload[offset],
-                payload[offset + 1],
-                payload[offset + 2],
-                payload[offset + 3],
-            ]) as usize;
-
-            if frag_len < 4 {
-                break;
-            }
-
-            let payload_len = frag_len.saturating_sub(4);
-            offset += 4;
-
-            if offset + payload_len > payload.len() {
-                break;
-            }
-
-            let fragment = &payload[offset..offset + payload_len];
-            if fragment.len() >= 5 + GAME_SERVER_SIGNATURE.len() 
-                && fragment[5..5 + GAME_SERVER_SIGNATURE.len()] == GAME_SERVER_SIGNATURE {
-                return true;
-            }
-
-            offset += payload_len;
         }
 
         false
@@ -283,10 +308,22 @@ impl PacketCapture {
 
     /// Check if this is a login packet
     fn check_login_packet(payload: &[u8]) -> bool {
-        payload.len() == LOGIN_PACKET_SIZE
-            && payload.len() >= 20
-            && payload[0..10] == LOGIN_SIGNATURE_1
-            && payload[14..20] == LOGIN_SIGNATURE_2
+        if payload.len() != LOGIN_PACKET_SIZE {
+            return false;
+        }
+        
+        if payload.len() >= 20 {
+            let matches = payload[0..10] == LOGIN_SIGNATURE_1
+                && payload[14..20] == LOGIN_SIGNATURE_2;
+            
+            if matches {
+                debug!("✅ Login packet signature found");
+            }
+            
+            return matches;
+        }
+        
+        false
     }
 
     /// Process a complete game packet
