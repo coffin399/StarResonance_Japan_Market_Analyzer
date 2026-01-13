@@ -176,10 +176,40 @@ impl PacketCapture {
 
             let current_server = GameServer::new(source_ip, source_port, dest_ip, dest_port);
 
+            // ゲームサーバーIPの定義（手動設定）
+            const GAME_SERVER_IP: &str = "172.65.190.53";
+            
             // Try to identify game server
             if known_server != Some(current_server) {
                 // ペイロードがある場合のみチェック
                 if !tcp_payload.is_empty() {
+                    // ゲームサーバーIPのパケットを詳細ダンプ
+                    if source_ip.to_string() == GAME_SERVER_IP || dest_ip.to_string() == GAME_SERVER_IP {
+                        info!("🎮 Potential game server packet detected!");
+                        info!("  {}:{} -> {}:{}", source_ip, source_port, dest_ip, dest_port);
+                        info!("  Payload length: {}", tcp_payload.len());
+                        
+                        // 最初の128バイトをダンプ
+                        let dump_len = tcp_payload.len().min(128);
+                        for (i, chunk) in tcp_payload[..dump_len].chunks(16).enumerate() {
+                            let hex: String = chunk.iter().map(|b| format!("{:02X} ", b)).collect();
+                            let ascii: String = chunk.iter().map(|b| {
+                                if *b >= 32 && *b <= 126 { *b as char } else { '.' }
+                            }).collect();
+                            info!("  {:04X}: {} | {}", i * 16, hex, ascii);
+                        }
+                        if tcp_payload.len() > dump_len {
+                            info!("  ... ({} more bytes)", tcp_payload.len() - dump_len);
+                        }
+                        
+                        // 強制的にゲームサーバーとして認識
+                        info!("🎮 Game server confirmed: {}:{} -> {}:{}", 
+                            source_ip, source_port, dest_ip, dest_port);
+                        known_server = Some(current_server);
+                        tcp_reassembler.clear(seq_number + tcp_payload.len());
+                        continue;
+                    }
+                    
                     // 定期的にサンプルパケットをログ出力
                     if packet_count % 500 == 0 {
                         debug!("Sample packet: {}:{} -> {}:{}, payload_len={}", 
