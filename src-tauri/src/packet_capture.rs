@@ -16,7 +16,7 @@ pub struct PacketCapture {
 
 impl PacketCapture {
     pub fn new() -> Result<Self> {
-        info!("PacketCapture を初期化中...");
+        info!("=== PacketCapture を初期化中 ===");
 
         Ok(PacketCapture {
             running: Arc::new(AtomicBool::new(false)),
@@ -66,20 +66,29 @@ impl PacketCapture {
     }
 
     pub async fn run_capture(running: Arc<AtomicBool>, db: Arc<Mutex<Database>>) -> Result<()> {
+        info!("=== run_capture 開始 ===");
+        
         // 管理者権限チェック
+        info!("管理者権限をチェック中...");
         Self::check_admin_privileges()
             .context("No administrator privileges")?;
+        info!("管理者権限: OK");
 
         running.store(true, Ordering::SeqCst);
-        info!("Starting packet capture");
+        info!("running フラグを true に設定");
 
         // 別スレッドでキャプチャを実行（ブロッキング処理のため）
+        info!("spawn_blocking でキャプチャスレッドを起動");
         tokio::task::spawn_blocking(move || {
+            info!("=== capture_loop_blocking スレッド開始 ===");
             if let Err(e) = Self::capture_loop_blocking(running, db) {
                 error!("Packet capture error: {}", e);
+            } else {
+                info!("=== capture_loop_blocking スレッド正常終了 ===");
             }
         });
 
+        info!("=== run_capture 完了（スレッドは継続中） ===");
         Ok(())
     }
 
@@ -87,22 +96,33 @@ impl PacketCapture {
         running: Arc<AtomicBool>,
         db: Arc<Mutex<Database>>,
     ) -> Result<()> {
-        info!("Initializing WinDivert...");
+        info!("=== capture_loop_blocking: Initializing WinDivert ===");
         
         let filter = create_windivert_filter();
-        info!("Filter: {}", filter);
+        info!("WinDivert Filter: {}", filter);
 
+        info!("WinDivert::open を呼び出します...");
         // Open WinDivert (SNIFF mode to not affect the game)
-        let divert = WinDivert::open(
+        let divert = match WinDivert::open(
             &filter,
             WINDIVERT_LAYER_NETWORK,
             0,
             WINDIVERT_FLAG_SNIFF,
-        ).context("Failed to start WinDivert. Are you running as administrator?")?;
+        ) {
+            Ok(d) => {
+                info!("✅ WinDivert::open 成功！");
+                d
+            }
+            Err(e) => {
+                error!("❌ WinDivert::open 失敗: {}", e);
+                return Err(e).context("Failed to start WinDivert. Are you running as administrator?");
+            }
+        };
 
-        info!("Packet capture started. Waiting for game server...");
+        info!("🎉 Packet capture started. Waiting for game server...");
 
         let mut buffer = vec![0u8; 10 * 1024 * 1024]; // 10MB buffer like BPSR Logs
+        info!("Buffer allocated: {} MB", buffer.len() / 1024 / 1024);
         let mut known_server: Option<GameServer> = None;
         let mut tcp_reassembler = TCPReassembler::new();
         let mut packet_count = 0u64;

@@ -25,32 +25,40 @@ struct AppState {
 
 #[tauri::command]
 async fn start_packet_capture(state: State<'_, AppState>) -> Result<(), String> {
-    info!("パケットキャプチャを開始します");
+    info!("=== パケットキャプチャを開始します ===");
     
     let mut capture_lock = state.capture.lock().await;
+    info!("capture_lock acquired");
     
     if capture_lock.is_some() {
+        warn!("パケットキャプチャは既に実行中です");
         return Err("パケットキャプチャは既に実行中です".to_string());
     }
 
+    info!("PacketCapture::new() を呼び出します");
     match packet_capture::PacketCapture::new() {
         Ok(capture) => {
+            info!("PacketCapture インスタンス作成成功");
             let db = Arc::clone(&state.db);
             let running = capture.get_running();
             
+            info!("パケットキャプチャスレッドを起動します");
             // パケットキャプチャを別スレッドで開始
             tokio::spawn(async move {
+                info!("パケットキャプチャスレッド内部に入りました");
                 if let Err(e) = packet_capture::PacketCapture::run_capture(running, db).await {
                     error!("パケットキャプチャエラー: {}", e);
+                } else {
+                    info!("パケットキャプチャスレッド正常終了");
                 }
             });
             
             *capture_lock = Some(capture);
-            info!("パケットキャプチャが正常に開始されました");
+            info!("=== パケットキャプチャが正常に開始されました ===");
             Ok(())
         }
         Err(e) => {
-            error!("パケットキャプチャの開始に失敗: {}", e);
+            error!("PacketCapture::new() でエラー: {}", e);
             Err(format!("パケットキャプチャの開始に失敗しました: {}", e))
         }
     }
@@ -134,9 +142,9 @@ async fn clear_database(state: State<'_, AppState>) -> Result<(), String> {
 }
 
 fn main() {
-    // ロギング設定
+    // ロギング設定（DEBUGレベルに変更）
     tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
+        .with_max_level(tracing::Level::DEBUG)
         .init();
 
     info!("StarResonance Market Analyzer を起動しています...");
