@@ -221,25 +221,42 @@ impl PacketCapture {
                 continue;
             }
 
+            // デバッグ: ゲームサーバーからのパケットを記録
+            if packet_count % 100 == 0 {
+                debug!("Game server packet: seq={}, payload_len={}", seq_number, tcp_payload.len());
+            }
+
             // Add to TCP reassembler
             tcp_reassembler.add_packet(seq_number, tcp_payload.to_vec());
-            tcp_reassembler.reassemble();
+            let reassembled = tcp_reassembler.reassemble();
+            
+            if reassembled && packet_count % 100 == 0 {
+                debug!("TCP reassembler: data_len={}", tcp_reassembler.data.len());
+            }
 
             // Extract complete packets
+            let mut extracted_count = 0;
             while let Some(packet_data) = tcp_reassembler.extract_packet() {
                 game_packet_count += 1;
+                extracted_count += 1;
+                
+                debug!("Extracted packet #{}: size={}", game_packet_count, packet_data.len());
                 
                 match Self::process_game_packet(&packet_data, &db) {
                     Ok(true) => {
-                        debug!("Game packet processed successfully");
+                        info!("✅ Game packet processed successfully");
                     }
                     Ok(false) => {
-                        // Not a market packet
+                        debug!("Packet processed (not market data)");
                     }
                     Err(e) => {
                         debug!("Failed to process packet: {}", e);
                     }
                 }
+            }
+            
+            if extracted_count > 0 {
+                debug!("Extracted {} packets from reassembler", extracted_count);
             }
         }
 

@@ -41,7 +41,7 @@ impl TCPReassembler {
     }
 
     pub fn reassemble(&mut self) -> bool {
-        let Some(next_seq) = self.next_seq else {
+        let Some(mut next_seq) = self.next_seq else {
             return false;
         };
 
@@ -52,7 +52,8 @@ impl TCPReassembler {
             } else {
                 self.data.extend_from_slice(&cached_data);
             }
-            self.next_seq = Some(next_seq.wrapping_add(cached_data.len()));
+            next_seq = next_seq.wrapping_add(cached_data.len());
+            self.next_seq = Some(next_seq);
             progress = true;
         }
 
