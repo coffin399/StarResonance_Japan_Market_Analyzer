@@ -15,7 +15,7 @@ use models::MarketItem;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 use tauri::State;
-use tracing::{info, error};
+use tracing::{info, error, warn};
 
 // アプリケーション状態
 struct AppState {
