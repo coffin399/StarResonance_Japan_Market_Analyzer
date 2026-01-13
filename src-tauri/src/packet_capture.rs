@@ -176,39 +176,10 @@ impl PacketCapture {
 
             let current_server = GameServer::new(source_ip, source_port, dest_ip, dest_port);
 
-            // ゲームサーバーIPの定義（手動設定）
-            const GAME_SERVER_IP: &str = "172.65.190.53";
-            
             // Try to identify game server
             if known_server != Some(current_server) {
                 // ペイロードがある場合のみチェック
                 if !tcp_payload.is_empty() {
-                    // ゲームサーバーIPのパケットを詳細ダンプ
-                    if source_ip.to_string() == GAME_SERVER_IP || dest_ip.to_string() == GAME_SERVER_IP {
-                        info!("🎮 Potential game server packet detected!");
-                        info!("  {}:{} -> {}:{}", source_ip, source_port, dest_ip, dest_port);
-                        info!("  Payload length: {}", tcp_payload.len());
-                        
-                        // 最初の128バイトをダンプ
-                        let dump_len = tcp_payload.len().min(128);
-                        for (i, chunk) in tcp_payload[..dump_len].chunks(16).enumerate() {
-                            let hex: String = chunk.iter().map(|b| format!("{:02X} ", b)).collect();
-                            let ascii: String = chunk.iter().map(|b| {
-                                if *b >= 32 && *b <= 126 { *b as char } else { '.' }
-                            }).collect();
-                            info!("  {:04X}: {} | {}", i * 16, hex, ascii);
-                        }
-                        if tcp_payload.len() > dump_len {
-                            info!("  ... ({} more bytes)", tcp_payload.len() - dump_len);
-                        }
-                        
-                        // 強制的にゲームサーバーとして認識
-                        info!("🎮 Game server confirmed: {}:{} -> {}:{}", 
-                            source_ip, source_port, dest_ip, dest_port);
-                        known_server = Some(current_server);
-                        tcp_reassembler.clear(seq_number + tcp_payload.len());
-                        continue;
-                    }
                     
                     // 定期的にサンプルパケットをログ出力
                     if packet_count % 500 == 0 {
@@ -282,54 +253,17 @@ impl PacketCapture {
 
     /// Check if payload contains game server signature
     fn check_game_signature(payload: &[u8]) -> bool {
-        if payload.len() < 10 {
+        if payload.len() < 20 {
             return false;
         }
 
-        // BPSR Logsの実装を完全に再現
-        // パケットの最初の4バイトをチェック
-        if payload.len() >= 10 {
-            let first_10 = &payload[..10];
-            
-            // パケット構造: [length:4][type:2][...]
-            // payload[4] が 0 の場合は特定のパケットタイプ
-            if first_10[4] == 0 {
-                let mut offset = 0;
-                let mut iteration = 0;
-                
-                while offset + 4 <= payload.len() {
-                    iteration += 1;
-                    if iteration > 1000 {
-                        break; // Prevent infinite loop
-                    }
-
-                    let frag_len = u32::from_le_bytes([
-                        payload[offset],
-                        payload[offset + 1],
-                        payload[offset + 2],
-                        payload[offset + 3],
-                    ]) as usize;
-
-                    if frag_len < 4 {
-                        break;
-                    }
-
-                    let payload_len = frag_len.saturating_sub(4);
-                    offset += 4;
-
-                    if offset + payload_len > payload.len() {
-                        break;
-                    }
-
-                    let fragment = &payload[offset..offset + payload_len];
-                    if fragment.len() >= 5 + GAME_SERVER_SIGNATURE.len() 
-                        && fragment[5..5 + GAME_SERVER_SIGNATURE.len()] == GAME_SERVER_SIGNATURE {
-                        debug!("✅ Game signature found at offset {}", offset);
-                        return true;
-                    }
-
-                    offset += payload_len;
-                }
+        // シンプルな検索: ペイロード内でシグネチャを探す
+        // 実際のパケットでは offset 12-17 に "63 33 53 42" が含まれている
+        for i in 0..payload.len().saturating_sub(6) {
+            if i + 6 <= payload.len() 
+                && &payload[i..i + 6] == &GAME_SERVER_SIGNATURE {
+                debug!("✅ Game signature found at offset {}", i);
+                return true;
             }
         }
 
