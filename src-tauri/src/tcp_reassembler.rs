@@ -62,7 +62,6 @@ impl TCPReassembler {
 
     pub fn extract_packet(&mut self) -> Option<Vec<u8>> {
         if self.data.len() < 4 {
-            tracing::debug!("extract_packet: not enough data ({} bytes)", self.data.len());
             return None;
         }
 
@@ -74,34 +73,28 @@ impl TCPReassembler {
             self.data[3],
         ]) as usize;
 
-        tracing::debug!("extract_packet: packet_size={}, data_len={}", packet_size, self.data.len());
-
         // パケットサイズの妥当性チェック
         if packet_size < 6 {
-            tracing::warn!("extract_packet: packet_size too small ({}), clearing buffer", packet_size);
-            // 異常なパケットサイズの場合、バッファをクリア
+            tracing::warn!("Invalid packet_size: {} (too small), clearing buffer", packet_size);
             self.data.clear();
             return None;
         }
         
         if packet_size > 1024 * 1024 {
-            tracing::warn!("extract_packet: packet_size too large ({}), clearing buffer", packet_size);
-            // 1MB以上は異常
+            tracing::warn!("Invalid packet_size: {} (too large), clearing buffer", packet_size);
             self.data.clear();
             return None;
         }
 
         if self.data.len() < packet_size {
-            tracing::debug!("extract_packet: waiting for more data (need {} more bytes)", 
-                packet_size - self.data.len());
+            // データ待ち（ログなし）
             return None;
         }
 
         // Extract packet
-        tracing::info!("✅ Extracting packet: size={}", packet_size);
+        tracing::info!("✅ Packet extracted: {} bytes", packet_size);
         let packet = self.data[..packet_size].to_vec();
         self.data = self.data[packet_size..].to_vec();
-        tracing::debug!("extract_packet: remaining data_len={}", self.data.len());
 
         Some(packet)
     }

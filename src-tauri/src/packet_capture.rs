@@ -147,9 +147,9 @@ impl PacketCapture {
 
             packet_count += 1;
             
-            // Log every 1000 packets
-            if packet_count % 1000 == 0 {
-                debug!("Packets received: {}, Game packets: {}", packet_count, game_packet_count);
+            // Log every 5000 packets
+            if packet_count % 5000 == 0 {
+                info!("📊 Stats: {} packets received, {} game packets processed", packet_count, game_packet_count);
             }
 
             let packet_data = &buffer[..recv_len];
@@ -181,18 +181,6 @@ impl PacketCapture {
                 // ペイロードがある場合のみチェック
                 if !tcp_payload.is_empty() {
                     
-                    // 定期的にサンプルパケットをログ出力
-                    if packet_count % 500 == 0 {
-                        debug!("Sample packet: {}:{} -> {}:{}, payload_len={}", 
-                            source_ip, source_port, dest_ip, dest_port, tcp_payload.len());
-                        if tcp_payload.len() >= 16 {
-                            let preview: Vec<String> = tcp_payload[..16.min(tcp_payload.len())]
-                                .iter()
-                                .map(|b| format!("{:02X}", b))
-                                .collect();
-                            debug!("  Payload preview: {}", preview.join(" "));
-                        }
-                    }
                     
                     // Method 1: Check for game server signature
                     if Self::check_game_signature(tcp_payload) {
@@ -221,42 +209,25 @@ impl PacketCapture {
                 continue;
             }
 
-            // デバッグ: ゲームサーバーからのパケットを記録
-            if packet_count % 100 == 0 {
-                debug!("Game server packet: seq={}, payload_len={}", seq_number, tcp_payload.len());
-            }
-
             // Add to TCP reassembler
             tcp_reassembler.add_packet(seq_number, tcp_payload.to_vec());
-            let reassembled = tcp_reassembler.reassemble();
-            
-            if reassembled && packet_count % 100 == 0 {
-                debug!("TCP reassembler: data_len={}", tcp_reassembler.data.len());
-            }
+            tcp_reassembler.reassemble();
 
             // Extract complete packets
-            let mut extracted_count = 0;
             while let Some(packet_data) = tcp_reassembler.extract_packet() {
                 game_packet_count += 1;
-                extracted_count += 1;
-                
-                debug!("Extracted packet #{}: size={}", game_packet_count, packet_data.len());
                 
                 match Self::process_game_packet(&packet_data, &db) {
                     Ok(true) => {
-                        info!("✅ Game packet processed successfully");
+                        info!("✅ Market packet processed");
                     }
                     Ok(false) => {
-                        debug!("Packet processed (not market data)");
+                        // Not market data (no log)
                     }
                     Err(e) => {
-                        debug!("Failed to process packet: {}", e);
+                        warn!("Packet parse error: {}", e);
                     }
                 }
-            }
-            
-            if extracted_count > 0 {
-                debug!("Extracted {} packets from reassembler", extracted_count);
             }
         }
 
@@ -314,15 +285,15 @@ impl PacketCapture {
         info!("📦 Game packet: type={:04X}, compressed={}, size={}", 
             packet.packet_type, packet.is_compressed, packet.size);
 
-        // アイテム名を検出
+        // アイテム名・IDを検出
         let item_names = Self::extract_japanese_strings(&packet.payload);
         if !item_names.is_empty() {
-            info!("   🎁 Found {} potential item names:", item_names.len());
-            for (idx, name) in item_names.iter().take(20).enumerate() {
+            info!("   🎁 Found {} potential items/IDs:", item_names.len());
+            for (idx, name) in item_names.iter().take(30).enumerate() {
                 info!("      [{}] {}", idx + 1, name);
             }
-            if item_names.len() > 20 {
-                info!("      ... and {} more", item_names.len() - 20);
+            if item_names.len() > 30 {
+                info!("      ... and {} more", item_names.len() - 30);
             }
         }
 
@@ -347,7 +318,7 @@ impl PacketCapture {
         Ok(false)
     }
 
-    /// Extract Japanese strings from payload (UTF-8)
+    /// Extract item names and IDs from payload (UTF-8)
     fn extract_japanese_strings(payload: &[u8]) -> Vec<String> {
         let mut strings = Vec::new();
         let mut i = 0;
@@ -356,7 +327,7 @@ impl PacketCapture {
             // 文字列の長さプレフィックスを探す（1バイトまたは2バイト）
             // Protobufスタイル: length-prefixed strings
             
-            // 最小3バイト必要（長さ1 + 最低2バイトの日本語文字）
+            // 最小3バイト必要（長さ1 + 最低2バイトの文字）
             if i + 3 >= payload.len() {
                 break;
             }
@@ -371,11 +342,22 @@ impl PacketCapture {
                 // UTF-8として解析を試みる
                 if let Ok(s) = std::str::from_utf8(string_bytes) {
                     // 日本語文字（ひらがな、カタカナ、漢字）を含むかチェック
-                    if s.chars().any(|c| {
+                    let has_japanese = s.chars().any(|c| {
                         ('\u{3040}'..='\u{309F}').contains(&c) || // ひらがな
                         ('\u{30A0}'..='\u{30FF}').contains(&c) || // カタカナ
                         ('\u{4E00}'..='\u{9FAF}').contains(&c)    // 漢字
-                    }) && s.chars().all(|c| !c.is_control()) {
+                    });
+                    
+                    // 英数字のみ（アイテムIDの可能性）
+                    let is_ascii_id = s.len() >= 3 && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+                    
+                    // プレイヤー名らしきパターンを除外（ギルドタグ [XXX] など）
+                    let is_player_name = s.starts_with('[') && s.contains(']');
+                    
+                    // 意味のある文字列か判定
+                    let is_meaningful = (has_japanese || is_ascii_id) && !is_player_name && s.chars().all(|c| !c.is_control());
+                    
+                    if is_meaningful {
                         strings.push(s.to_string());
                         i += 1 + len;
                         continue;
@@ -391,11 +373,17 @@ impl PacketCapture {
                     let string_bytes = &payload[i + 2..i + 2 + len];
                     
                     if let Ok(s) = std::str::from_utf8(string_bytes) {
-                        if s.chars().any(|c| {
+                        let has_japanese = s.chars().any(|c| {
                             ('\u{3040}'..='\u{309F}').contains(&c) ||
                             ('\u{30A0}'..='\u{30FF}').contains(&c) ||
                             ('\u{4E00}'..='\u{9FAF}').contains(&c)
-                        }) && s.chars().all(|c| !c.is_control()) {
+                        });
+                        
+                        let is_ascii_id = s.len() >= 3 && s.chars().all(|c| c.is_ascii_alphanumeric() || c == '_' || c == '-');
+                        let is_player_name = s.starts_with('[') && s.contains(']');
+                        let is_meaningful = (has_japanese || is_ascii_id) && !is_player_name && s.chars().all(|c| !c.is_control());
+                        
+                        if is_meaningful {
                             strings.push(s.to_string());
                             i += 2 + len;
                             continue;
