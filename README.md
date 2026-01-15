@@ -1,4 +1,4 @@
-# StarResonance Japan Market Analyzer
+# BlueProtocol StarResonance Japan Market Analyzer
 
 > **⚠️ プロジェクト一時停止のお知らせ**
 > 
