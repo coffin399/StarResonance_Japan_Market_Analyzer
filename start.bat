@@ -7,10 +7,11 @@ echo ========================================
 echo.
 
 REM Find best Python version
+setlocal enabledelayedexpansion
 call find-python.bat
 set PYTHON_CHECK=%errorlevel%
 
-if "%PYTHON_CMD%"=="" (
+if "!PYTHON_CMD!"=="" (
     echo ========================================
     echo ERROR: No Python installation found!
     echo ========================================
@@ -22,15 +23,15 @@ if "%PYTHON_CMD%"=="" (
     exit /b 1
 )
 
-if %PYTHON_CHECK% equ 0 (
-    echo ✓ Using Python 3.10.x: %PYTHON_CMD%
+if !PYTHON_CHECK! equ 0 (
+    echo ✓ Using Python 3.10.x: !PYTHON_CMD!
 ) else (
     echo ========================================
     echo WARNING: Python 3.10 not found!
     echo ========================================
     echo.
-    echo Current Python: %PYTHON_CMD%
-    %PYTHON_CMD% --version
+    echo Current Python: !PYTHON_CMD!
+    !PYTHON_CMD! --version
     echo.
     echo Python 3.10 is STRONGLY RECOMMENDED for best compatibility.
     echo Some packages may fail to install with other versions.
@@ -44,13 +45,13 @@ if %PYTHON_CHECK% equ 0 (
 )
 
 echo.
-%PYTHON_CMD% --version
+!PYTHON_CMD! --version
 echo.
 
 REM Check for virtual environment
 if not exist venv (
-    echo Virtual environment not found. Creating with %PYTHON_CMD%...
-    %PYTHON_CMD% -m venv venv
+    echo Virtual environment not found. Creating with !PYTHON_CMD!...
+    !PYTHON_CMD! -m venv venv
     echo Virtual environment created.
     echo.
 )

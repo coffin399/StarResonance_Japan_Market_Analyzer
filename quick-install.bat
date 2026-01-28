@@ -8,10 +8,11 @@ echo ========================================
 echo.
 
 REM Find best Python version (3.10 REQUIRED)
+setlocal enabledelayedexpansion
 call find-python.bat
 set PYTHON_CHECK=%errorlevel%
 
-if "%PYTHON_CMD%"=="" (
+if "!PYTHON_CMD!"=="" (
     echo ========================================
     echo ERROR: No Python installation found!
     echo ========================================
@@ -24,19 +25,19 @@ if "%PYTHON_CMD%"=="" (
     exit /b 1
 )
 
-if %PYTHON_CHECK% equ 0 (
+if !PYTHON_CHECK! equ 0 (
     echo ========================================
     echo ✓ Python 3.10.x detected! (PERFECT)
     echo ========================================
-    %PYTHON_CMD% --version
+    !PYTHON_CMD! --version
     echo.
 ) else (
     echo ========================================
     echo WARNING: Python 3.10 not found!
     echo ========================================
     echo.
-    echo Current Python: %PYTHON_CMD%
-    %PYTHON_CMD% --version
+    echo Current Python: !PYTHON_CMD!
+    !PYTHON_CMD! --version
     echo.
     echo Python 3.10 is REQUIRED for reliable installation.
     echo Other versions may cause build errors with pydantic-core.
@@ -56,8 +57,8 @@ if %PYTHON_CHECK% equ 0 (
 
 REM Create virtual environment
 if not exist venv (
-    echo Creating virtual environment with %PYTHON_CMD%...
-    %PYTHON_CMD% -m venv venv
+    echo Creating virtual environment with !PYTHON_CMD!...
+    !PYTHON_CMD! -m venv venv
     echo.
 )
 

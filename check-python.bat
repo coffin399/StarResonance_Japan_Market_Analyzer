@@ -7,10 +7,11 @@ echo ========================================
 echo.
 
 REM Find best Python version
+setlocal enabledelayedexpansion
 call find-python.bat
 set PYTHON_CHECK=%errorlevel%
 
-if "%PYTHON_CMD%"=="" (
+if "!PYTHON_CMD!"=="" (
     echo ========================================
     echo ERROR: No Python installation found!
     echo ========================================
@@ -23,23 +24,23 @@ if "%PYTHON_CMD%"=="" (
 )
 
 echo ========================================
-if %PYTHON_CHECK% equ 0 (
+if !PYTHON_CHECK! equ 0 (
     echo ✓✓✓ PERFECT: Python 3.10.x found!
 ) else (
     echo ⚠ WARNING: Python 3.10 not found
 )
 echo ========================================
 echo.
-echo Found Python: %PYTHON_CMD%
-%PYTHON_CMD% --version
+echo Found Python: !PYTHON_CMD!
+!PYTHON_CMD! --version
 
 echo.
 echo Checking Python version details...
-%PYTHON_CMD% -c "import sys; print(f'Version: {sys.version}'); print(f'Major: {sys.version_info.major}'); print(f'Minor: {sys.version_info.minor}'); print(f'Micro: {sys.version_info.micro}')"
+!PYTHON_CMD! -c "import sys; print(f'Version: {sys.version}'); print(f'Major: {sys.version_info.major}'); print(f'Minor: {sys.version_info.minor}'); print(f'Micro: {sys.version_info.micro}')"
 
 echo.
 echo Checking compatibility...
-%PYTHON_CMD% -c "import sys; major, minor = sys.version_info[:2]; print('✓ Compatible' if (major == 3 and 10 <= minor <= 13) else '⚠ May have compatibility issues')"
+!PYTHON_CMD! -c "import sys; major, minor = sys.version_info[:2]; print('✓ Compatible' if (major == 3 and 10 <= minor <= 13) else '⚠ May have compatibility issues')"
 
 echo.
 echo Recommended versions:
@@ -51,18 +52,18 @@ echo   ✗ Python 3.14.x - Not supported yet
 echo.
 
 echo Checking if pip is available...
-%PYTHON_CMD% -m pip --version
-if %errorlevel% neq 0 (
+!PYTHON_CMD! -m pip --version
+if !errorlevel! neq 0 (
     echo ERROR: pip is not available
-    echo Try: %PYTHON_CMD% -m ensurepip
+    echo Try: !PYTHON_CMD! -m ensurepip
     pause
     exit /b 1
 )
 
 echo.
 echo Checking if venv is available...
-%PYTHON_CMD% -m venv --help >nul 2>&1
-if %errorlevel% neq 0 (
+!PYTHON_CMD! -m venv --help >nul 2>&1
+if !errorlevel! neq 0 (
     echo ERROR: venv is not available
     pause
     exit /b 1
@@ -75,8 +76,8 @@ echo ========================================
 echo.
 
 REM Suggest installation method
-%PYTHON_CMD% -c "import sys; exit(0 if (sys.version_info.major == 3 and 10 <= sys.version_info.minor <= 11) else 1)"
-if %errorlevel% equ 0 (
+!PYTHON_CMD! -c "import sys; exit(0 if (sys.version_info.major == 3 and 10 <= sys.version_info.minor <= 11) else 1)"
+if !errorlevel! equ 0 (
     echo ========================================
     echo ✓ Your Python version is PERFECT!
     echo ========================================
