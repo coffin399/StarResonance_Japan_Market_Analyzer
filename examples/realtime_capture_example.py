@@ -7,6 +7,15 @@ sys.path.insert(0, '.')
 
 import time
 import signal
+import warnings
+import logging
+
+# 警告を抑制
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', message='.*TripleDES.*')
+logging.getLogger('scapy.runtime').setLevel(logging.ERROR)
+logging.getLogger('scapy').setLevel(logging.ERROR)
+
 from src.packet_decoder.realtime_capture import (
     RealtimePacketCapture,
     RealtimeCaptureCallback,

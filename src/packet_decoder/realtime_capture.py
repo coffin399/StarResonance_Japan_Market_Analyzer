@@ -8,9 +8,16 @@ WinDivertを使用してリアルタイムでゲームパケットをキャプ�
 import logging
 import threading
 import time
+import warnings
 from typing import Optional, Callable, List
 from datetime import datetime
 from queue import Queue
+
+# 警告を抑制
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', message='.*TripleDES.*')
+logging.getLogger('scapy.runtime').setLevel(logging.ERROR)
+logging.getLogger('scapy').setLevel(logging.ERROR)
 
 try:
     from scapy.all import sniff, Packet, Raw

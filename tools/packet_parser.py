@@ -7,10 +7,19 @@ Wiresharkでキャプチャしたpcapファイルからゲームの取引所デ�
 import sys
 import struct
 import logging
+import warnings
 from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
 import json
+
+# 警告を抑制
+warnings.filterwarnings('ignore', category=DeprecationWarning)
+warnings.filterwarnings('ignore', message='.*TripleDES.*')
+
+# scapyのログレベルを設定（Wireshark manuf警告を抑制）
+logging.getLogger('scapy.runtime').setLevel(logging.ERROR)
+logging.getLogger('scapy').setLevel(logging.ERROR)
 
 # ロギング設定
 logging.basicConfig(
