@@ -1,6 +1,6 @@
 """
-Game Packet Parser V2 - Protobuf Based
-ゲームパケットパーサー V2 - Protobuf対応版
+Game Packet Parser V2 - Protobuf Based with Auto-Enrichment
+ゲームパケットパーサー V2 - Protobuf対応版（自動エンリッチメント付き）
 
 Based on: https://github.com/JordieB/bpsr_labs
 """
@@ -12,6 +12,7 @@ from pathlib import Path
 from datetime import datetime
 from typing import List, Dict, Optional
 import json
+import os
 
 # 警告を抑制
 warnings.filterwarnings('ignore', category=DeprecationWarning)
@@ -97,9 +98,80 @@ class GamePacketParserV2:
     MAGIC_BYTES = bytes([0x00, 0x63, 0x33, 0x53, 0x42, 0x00])
     MAGIC_BYTES_SHORT = b'c3SB'
     
-    def __init__(self, pcap_file: str):
+    def __init__(self, pcap_file: str, auto_enrich: bool = True):
         self.pcap_file = Path(pcap_file)
         self.items = []
+        self.auto_enrich = auto_enrich
+        self.item_master = self._load_item_master() if auto_enrich else {}
+    
+    def _load_item_master(self) -> dict:
+        """アイテムマスターデータを読み込み"""
+        master_file = Path('data/item_master.json')
+        
+        if not master_file.exists():
+            logger.warning("Item master file not found: data/item_master.json")
+            return {}
+        
+        try:
+            encodings = ['utf-8', 'utf-8-sig', 'cp932', 'shift-jis', 'latin-1']
+            for encoding in encodings:
+                try:
+                    with open(master_file, 'r', encoding=encoding) as f:
+                        data = json.load(f)
+                    
+                    # 新形式: {"items": {...}}
+                    if isinstance(data, dict) and 'items' in data:
+                        return data['items']
+                    
+                    # シンプル形式: {"ID": "名前", ...}
+                    if isinstance(data, dict):
+                        normalized = {}
+                        for key, value in data.items():
+                            if key.startswith('_'):
+                                continue
+                            if isinstance(value, str):
+                                normalized[key] = {"name": value, "category": "misc"}
+                            elif isinstance(value, dict):
+                                normalized[key] = value
+                        return normalized
+                    
+                    return {}
+                except (UnicodeDecodeError, json.JSONDecodeError):
+                    continue
+            
+            logger.warning("Could not decode item master file")
+            return {}
+            
+        except Exception as e:
+            logger.warning(f"Error loading item master: {e}")
+            return {}
+    
+    def _enrich_item(self, item: dict) -> dict:
+        """アイテムに名前を付与"""
+        if not self.auto_enrich or not self.item_master:
+            return item
+        
+        item_id_str = str(item['item_id'])
+        
+        if item_id_str in self.item_master:
+            master_data = self.item_master[item_id_str]
+            
+            if isinstance(master_data, dict):
+                item_name = master_data.get('name', f'Item #{item_id_str}')
+                category = master_data.get('category', 'misc')
+            else:
+                item_name = master_data
+                category = 'misc'
+            
+            # 両方の形式に名前を設定
+            item['item_name'] = item_name
+            if 'analysis' in item:
+                item['analysis']['item_name'] = item_name
+                item['analysis']['category'] = category
+            else:
+                item['category'] = category
+        
+        return item
     
     def parse(self) -> List[Dict]:
         """PCAPファイルをパース"""
@@ -125,6 +197,8 @@ class GamePacketParserV2:
                     if self.MAGIC_BYTES in data or self.MAGIC_BYTES_SHORT in data:
                         items = self._parse_packet(data)
                         if items:
+                            # 自動エンリッチメント
+                            items = [self._enrich_item(item) for item in items]
                             logger.info(f"Packet #{i+1}: Found {len(items)} items")
                             self.items.extend(items)
             
@@ -310,29 +384,63 @@ class GamePacketParserV2:
         
         print(f"\n{'='*80}")
         print(f"SUMMARY: Found {len(self.items)} items")
+        if self.auto_enrich:
+            enriched = sum(1 for item in self.items if item.get('item_name'))
+            print(f"Enriched: {enriched} / {len(self.items)}")
         print(f"{'='*80}\n")
         
         for i, item in enumerate(self.items[:10], 1):
             print(f"{i}. Item ID: {item['item_id']}")
             if item.get('item_name'):
                 print(f"   Name: {item['item_name']}")
+                if item.get('category'):
+                    print(f"   Category: {item['category']}")
+            else:
+                print(f"   Name: Unknown Item #{item['item_id']}")
             print(f"   Quantity: {item['quantity']:,}")
-            print(f"   Price: {item['price']:,}")
-            print(f"   Unit Price: {item['unit_price']:,}")
+            print(f"   Price: {item['price']:,} Luno")
+            print(f"   Unit Price: {item['unit_price']:,} Luno")
             print()
         
         if len(self.items) > 10:
             print(f"... and {len(self.items) - 10} more items")
+        
+        # 未知のアイテムをリスト表示
+        if self.auto_enrich:
+            unknown_ids = set()
+            for item in self.items:
+                if not item.get('item_name'):
+                    unknown_ids.add(str(item['item_id']))
+            
+            if unknown_ids:
+                print(f"\n{'='*80}")
+                print(f"Unknown items found: {len(unknown_ids)}")
+                print(f"{'='*80}")
+                print(f"Add these to data/item_master.json:")
+                for item_id in sorted(unknown_ids, key=int)[:10]:
+                    print(f'  "{item_id}": "Item Name Here",')
+                if len(unknown_ids) > 10:
+                    print(f"  ... and {len(unknown_ids) - 10} more")
 
 
 def main():
     if len(sys.argv) < 2:
-        print("Usage: python packet_parser_v2.py <pcap_file>")
+        print("Usage: python packet_parser_v2.py <pcap_file> [--no-enrich]")
+        print("\nOptions:")
+        print("  --no-enrich    Skip automatic item name enrichment")
         sys.exit(1)
     
     pcap_file = sys.argv[1]
+    auto_enrich = '--no-enrich' not in sys.argv
     
-    parser = GamePacketParserV2(pcap_file)
+    if auto_enrich:
+        print("Auto-enrichment: Enabled")
+        print("Item names will be added from data/item_master.json")
+    else:
+        print("Auto-enrichment: Disabled")
+    print()
+    
+    parser = GamePacketParserV2(pcap_file, auto_enrich=auto_enrich)
     items = parser.parse()
     
     if items:
