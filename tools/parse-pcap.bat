@@ -50,7 +50,18 @@ if exist ..\venv\Scripts\activate.bat (
 REM Run the parser
 echo Parsing file: %~1
 echo.
-python tools\packet_parser.py "%~1"
+
+REM Check if running from project root or tools directory
+if exist tools\packet_parser.py (
+    python tools\packet_parser.py "%~1"
+) else if exist packet_parser.py (
+    python packet_parser.py "%~1"
+) else (
+    echo ERROR: packet_parser.py not found
+    echo Please run from project root or tools directory
+    pause
+    exit /b 1
+)
 
 REM Check result
 if %errorlevel% equ 0 (

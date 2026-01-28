@@ -57,7 +57,17 @@ if not exist "%pcap_file%" (
     pause
     exit /b 1
 )
-python tools\packet_parser.py "%pcap_file%"
+
+REM Check path
+if exist tools\packet_parser.py (
+    python tools\packet_parser.py "%pcap_file%"
+) else if exist packet_parser.py (
+    python packet_parser.py "%pcap_file%"
+) else (
+    echo ERROR: packet_parser.py not found
+    pause
+    exit /b 1
+)
 pause
 exit /b 0
 
@@ -87,7 +97,11 @@ python -c "from scapy.all import sniff; pkts = sniff(timeout=%duration%, filter=
 if exist live_capture.pcap (
     echo.
     echo Capture complete! Analyzing...
-    python tools\packet_parser.py live_capture.pcap
+    if exist tools\packet_parser.py (
+        python tools\packet_parser.py live_capture.pcap
+    ) else if exist packet_parser.py (
+        python packet_parser.py live_capture.pcap
+    )
 )
 pause
 exit /b 0
