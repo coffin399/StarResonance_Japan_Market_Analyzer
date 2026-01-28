@@ -8,25 +8,29 @@ echo.
 
 REM Find best Python version
 call find-python.bat
+set PYTHON_CHECK=%errorlevel%
+
 if "%PYTHON_CMD%"=="" (
-    echo Searching for any Python installation...
-    python --version >nul 2>&1
-    if %errorlevel% neq 0 (
-        echo ERROR: Python is not installed or not in PATH
-        echo.
-        echo Please install Python 3.10 from:
-        echo https://www.python.org/downloads/release/python-31011/
-        echo.
-        echo Direct link (Windows 64-bit):
-        echo https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
-        echo.
-        pause
-        exit /b 1
-    )
-    set "PYTHON_CMD=python"
+    echo ========================================
+    echo ERROR: No Python installation found!
+    echo ========================================
+    echo.
+    echo Please install Python 3.10.11 from:
+    echo https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
+    echo.
+    pause
+    exit /b 1
 )
 
-echo Found Python:
+echo ========================================
+if %PYTHON_CHECK% equ 0 (
+    echo ✓✓✓ PERFECT: Python 3.10.x found!
+) else (
+    echo ⚠ WARNING: Python 3.10 not found
+)
+echo ========================================
+echo.
+echo Found Python: %PYTHON_CMD%
 %PYTHON_CMD% --version
 
 echo.

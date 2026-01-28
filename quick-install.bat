@@ -7,22 +7,52 @@ echo Quick Installation
 echo ========================================
 echo.
 
-REM Find best Python version (3.10 or 3.11)
+REM Find best Python version (3.10 REQUIRED)
 call find-python.bat
+set PYTHON_CHECK=%errorlevel%
+
 if "%PYTHON_CMD%"=="" (
-    echo ERROR: Python 3.10 or 3.11 not found
+    echo ========================================
+    echo ERROR: No Python installation found!
+    echo ========================================
     echo.
-    echo Please install Python 3.10 from:
-    echo https://www.python.org/downloads/release/python-31011/
+    echo Please install Python 3.10.11 from:
+    echo https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
     echo.
-    echo Recommended: Python 3.10.11 (Windows installer 64-bit)
+    echo Direct download (Windows 64-bit, recommended)
     pause
     exit /b 1
 )
 
-echo Found compatible Python version!
-%PYTHON_CMD% --version
-echo.
+if %PYTHON_CHECK% equ 0 (
+    echo ========================================
+    echo ✓ Python 3.10.x detected! (PERFECT)
+    echo ========================================
+    %PYTHON_CMD% --version
+    echo.
+) else (
+    echo ========================================
+    echo WARNING: Python 3.10 not found!
+    echo ========================================
+    echo.
+    echo Current Python: %PYTHON_CMD%
+    %PYTHON_CMD% --version
+    echo.
+    echo Python 3.10 is REQUIRED for reliable installation.
+    echo Other versions may cause build errors with pydantic-core.
+    echo.
+    echo Download Python 3.10.11 (RECOMMENDED):
+    echo https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
+    echo.
+    echo Continue with current version? (Y/N)
+    set /p choice=Choice: 
+    if /i not "!choice!"=="Y" (
+        echo Installation cancelled.
+        pause
+        exit /b 1
+    )
+    echo.
+)
 
 REM Create virtual environment
 if not exist venv (

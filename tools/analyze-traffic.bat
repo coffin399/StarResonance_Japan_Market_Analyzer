@@ -7,14 +7,32 @@ echo Game Traffic Analyzer
 echo ========================================
 echo.
 
+REM Find best Python version (3.10 preferred)
+if exist ..\find-python.bat (
+    call ..\find-python.bat
+) else if exist find-python.bat (
+    call find-python.bat
+) else (
+    set "PYTHON_CMD=python"
+)
+
+if "%PYTHON_CMD%"=="" (
+    set "PYTHON_CMD=python"
+)
+
 REM Activate virtual environment
 if exist venv\Scripts\activate.bat (
     call venv\Scripts\activate.bat
+    set "USE_VENV=1"
+) else if exist ..\venv\Scripts\activate.bat (
+    call ..\venv\Scripts\activate.bat
+    set "USE_VENV=1"
 ) else (
-    echo Error: Virtual environment not found
-    echo Please run quick-install.bat first
-    pause
-    exit /b 1
+    echo Warning: Virtual environment not found
+    echo Using: %PYTHON_CMD%
+    echo Please run quick-install.bat for best experience
+    echo.
+    set "USE_VENV=0"
 )
 
 echo This tool will help you analyze game traffic to find trading center packets.
@@ -47,14 +65,22 @@ if not exist "%pcap_file%" (
     pause
     exit /b 1
 )
-python tools\packet_parser.py "%pcap_file%"
+if "%USE_VENV%"=="1" (
+    python tools\packet_parser.py "%pcap_file%"
+) else (
+    %PYTHON_CMD% tools\packet_parser.py "%pcap_file%"
+)
 pause
 exit /b 0
 
 :list_interfaces
 echo.
 echo Listing network interfaces...
-python -c "from scapy.all import get_if_list; print('\n'.join(get_if_list()))"
+if "%USE_VENV%"=="1" (
+    python -c "from scapy.all import get_if_list; print('\n'.join(get_if_list()))"
+) else (
+    %PYTHON_CMD% -c "from scapy.all import get_if_list; print('\n'.join(get_if_list()))"
+)
 echo.
 echo Use one of these interface names for live capture.
 pause
@@ -72,12 +98,20 @@ echo Starting live capture for %duration% seconds...
 echo Open the game and browse the trading center now!
 echo.
 
-python -c "from scapy.all import sniff; pkts = sniff(timeout=%duration%, filter='tcp'); from scapy.all import wrpcap; wrpcap('live_capture.pcap', pkts); print(f'Captured {len(pkts)} packets to live_capture.pcap')"
+if "%USE_VENV%"=="1" (
+    python -c "from scapy.all import sniff; pkts = sniff(timeout=%duration%, filter='tcp'); from scapy.all import wrpcap; wrpcap('live_capture.pcap', pkts); print(f'Captured {len(pkts)} packets to live_capture.pcap')"
+) else (
+    %PYTHON_CMD% -c "from scapy.all import sniff; pkts = sniff(timeout=%duration%, filter='tcp'); from scapy.all import wrpcap; wrpcap('live_capture.pcap', pkts); print(f'Captured {len(pkts)} packets to live_capture.pcap')"
+)
 
 if exist live_capture.pcap (
     echo.
     echo Capture complete! Analyzing...
-    python tools\packet_parser.py live_capture.pcap
+    if "%USE_VENV%"=="1" (
+        python tools\packet_parser.py live_capture.pcap
+    ) else (
+        %PYTHON_CMD% tools\packet_parser.py live_capture.pcap
+    )
 )
 pause
 exit /b 0
@@ -93,7 +127,11 @@ if not exist "%pcap_file%" (
 
 echo.
 echo Searching for magic bytes...
-python -c "import sys; data = open(r'%pcap_file%', 'rb').read(); magics = [b'\x00\x63\x33\x53\x42\x00', b'\x63\x33\x53\x42', b'c3SB']; [print(f'Found {m.hex()} at position {data.find(m)}') if data.find(m) != -1 else None for m in magics]"
+if "%USE_VENV%"=="1" (
+    python -c "import sys; data = open(r'%pcap_file%', 'rb').read(); magics = [b'\x00\x63\x33\x53\x42\x00', b'\x63\x33\x53\x42', b'c3SB']; [print(f'Found {m.hex()} at position {data.find(m)}') if data.find(m) != -1 else None for m in magics]"
+) else (
+    %PYTHON_CMD% -c "import sys; data = open(r'%pcap_file%', 'rb').read(); magics = [b'\x00\x63\x33\x53\x42\x00', b'\x63\x33\x53\x42', b'c3SB']; [print(f'Found {m.hex()} at position {data.find(m)}') if data.find(m) != -1 else None for m in magics]"
+)
 
 pause
 exit /b 0
