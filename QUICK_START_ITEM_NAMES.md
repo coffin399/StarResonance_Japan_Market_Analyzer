@@ -155,7 +155,11 @@ Some games store item data in SQLite files:
 ## Pre-Populated Items
 ## すでに登録済みのアイテム
 
-The tool comes with 116+ items pre-populated:
+The tool comes with **6000+ items** pre-populated from [JordieB/bpsr_labs](https://github.com/JordieB/bpsr_labs)!
+
+**Source:** [item_name_map.json](https://github.com/JordieB/bpsr_labs/blob/main/data/game-data/item_name_map.json)
+
+**Examples:**
 
 **Currencies:**
 - 10002: Luno

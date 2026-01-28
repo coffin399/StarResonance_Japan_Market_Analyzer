@@ -8,6 +8,14 @@
 
 **重要**: このツールはパケット解析のみを行い、ゲームクライアントへの干渉や改変は一切行いません。
 
+## 📋 Credits / クレジット
+
+**Item Master Data Source:**
+- アイテムマスターデータは [JordieB/bpsr_labs](https://github.com/JordieB/bpsr_labs) から取得しました
+- Source: [item_name_map.json](https://github.com/JordieB/bpsr_labs/blob/main/data/game-data/item_name_map.json)
+- 6000+ items with English names
+- Thanks to [@JordieB](https://github.com/JordieB) for maintaining the comprehensive item database!
+
 ## 機能
 
 - 📊 **市場価格分析**: リアルタイムの取引所データを取得・保存

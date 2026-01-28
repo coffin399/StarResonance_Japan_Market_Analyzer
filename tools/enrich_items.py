@@ -20,7 +20,27 @@ def load_item_master(master_file: str = 'data/item_master.json') -> dict:
     
     with open(master_path, 'r', encoding='utf-8') as f:
         data = json.load(f)
-        return data.get('items', {})
+        
+        # 新形式: {"items": {...}} の場合
+        if isinstance(data, dict) and 'items' in data:
+            return data['items']
+        
+        # シンプル形式: {"ID": "名前", ...} の場合
+        # 文字列値をname付きの辞書に変換
+        if isinstance(data, dict):
+            normalized = {}
+            for key, value in data.items():
+                if key.startswith('_'):  # コメントフィールドをスキップ
+                    continue
+                if isinstance(value, str):
+                    # シンプル形式: "ID": "名前"
+                    normalized[key] = {"name": value, "category": "misc"}
+                elif isinstance(value, dict):
+                    # 既に辞書形式
+                    normalized[key] = value
+            return normalized
+        
+        return {}
 
 def enrich_items(input_file: str, output_file: str = None, master_file: str = 'data/item_master.json'):
     """アイテムデータに名前を付与"""
@@ -44,18 +64,24 @@ def enrich_items(input_file: str, output_file: str = None, master_file: str = 'd
         
         if item_id_str in item_master:
             master_data = item_master[item_id_str]
-            item_name = master_data.get('name', f'Item #{item_id_str}')
+            
+            # master_dataが辞書の場合
+            if isinstance(master_data, dict):
+                item_name = master_data.get('name', f'Item #{item_id_str}')
+                category = master_data.get('category', 'misc')
+            # master_dataが文字列の場合（シンプル形式）
+            else:
+                item_name = master_data
+                category = 'misc'
             
             # 新形式 (analysis フィールドあり)
             if 'analysis' in item:
                 item['analysis']['item_name'] = item_name
-                if 'category' in master_data:
-                    item['analysis']['category'] = master_data['category']
+                item['analysis']['category'] = category
             # 旧形式 (直接フィールド)
             else:
                 item['item_name'] = item_name
-                if 'category' in master_data:
-                    item['category'] = master_data['category']
+                item['category'] = category
             
             enriched += 1
         else:

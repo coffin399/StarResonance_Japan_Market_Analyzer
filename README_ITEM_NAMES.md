@@ -9,7 +9,15 @@ Item names are NOT included in the packet data and must be mapped manually from 
 **パケットから抽出できるのは アイテムID、数量、価格 のみです。**
 アイテム名はパケットに含まれていないため、手動でマスターデータに登録する必要があります。
 
-✅ **Already Pre-populated:** The `data/item_master.json` file contains 116+ common items based on game data.
+✅ **Already Pre-populated:** The `data/item_master.json` file contains **6000+ items** with English names!
+
+### 📋 Item Master Data Source
+
+Item master data is sourced from the excellent [JordieB/bpsr_labs](https://github.com/JordieB/bpsr_labs) repository:
+- **Source:** [item_name_map.json](https://github.com/JordieB/bpsr_labs/blob/main/data/game-data/item_name_map.json)
+- **Items:** 6000+ game items with English names
+- **Format:** Simple `"ID": "Name"` mapping
+- **Credit:** Thanks to [@JordieB](https://github.com/JordieB) for maintaining this comprehensive database!
 
 ## 手順
 
