@@ -247,11 +247,15 @@ class GamePacketParserV2:
                 unit_price = price // quantity
                 estimated_tax = int(price * 0.05)  # 5% tax (推定)
                 
-                # 詳細フォーマットで返す
+                # 詳細フォーマットで返す（新旧両対応）
                 return {
                     "price_luno": price,
                     "quantity": quantity,
                     "item_id": item_id,
+                    "item_name": "",  # エンリッチメント時に追加（旧形式互換）
+                    "listing_id": listing_id if listing_id > 0 else 0,
+                    "price": price,
+                    "unit_price": unit_price,
                     "metadata": {
                         "frame_offset": 0,  # パケット内のオフセット (後で設定可能)
                         "server_sequence": listing_id if listing_id > 0 else None,
@@ -268,7 +272,7 @@ class GamePacketParserV2:
                         }
                     },
                     "analysis": {
-                        "item_name": None,  # エンリッチメント時に追加
+                        "item_name": "",  # エンリッチメント時に追加
                         "unit_price_luno": unit_price,
                         "estimated_tax": estimated_tax,
                         "source": "packet_parser_v2"
@@ -310,7 +314,7 @@ class GamePacketParserV2:
         
         for i, item in enumerate(self.items[:10], 1):
             print(f"{i}. Item ID: {item['item_id']}")
-            if item['item_name']:
+            if item.get('item_name'):
                 print(f"   Name: {item['item_name']}")
             print(f"   Quantity: {item['quantity']:,}")
             print(f"   Price: {item['price']:,}")
