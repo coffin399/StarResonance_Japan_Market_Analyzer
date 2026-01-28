@@ -50,9 +50,21 @@ def enrich_items(input_file: str, output_file: str = None, master_file: str = 'd
         print(f"Error: Input file not found: {input_file}")
         return
     
-    # 入力ファイル読み込み
-    with open(input_path, 'r', encoding='utf-8') as f:
-        items = json.load(f)
+    # 入力ファイル読み込み（複数エンコーディング対応）
+    items = None
+    for encoding in ['utf-8', 'utf-8-sig', 'cp932', 'shift-jis', 'latin-1']:
+        try:
+            with open(input_path, 'r', encoding=encoding) as f:
+                items = json.load(f)
+            print(f"Successfully loaded file with encoding: {encoding}")
+            break
+        except (UnicodeDecodeError, json.JSONDecodeError) as e:
+            continue
+    
+    if items is None:
+        print(f"Error: Could not decode file with any supported encoding")
+        print(f"Tried: utf-8, utf-8-sig, cp932, shift-jis, latin-1")
+        return
     
     # マスターデータ読み込み
     item_master = load_item_master(master_file)
