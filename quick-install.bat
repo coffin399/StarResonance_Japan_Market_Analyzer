@@ -27,7 +27,7 @@ if "!PYTHON_CMD!"=="" (
 
 if !PYTHON_CHECK! equ 0 (
     echo ========================================
-    echo ✓ Python 3.10.x detected! (PERFECT)
+    echo Python 3.10.x detected! (PERFECT)
     echo ========================================
     !PYTHON_CMD! --version
     echo.

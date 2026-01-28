@@ -25,9 +25,9 @@ if "!PYTHON_CMD!"=="" (
 
 echo ========================================
 if !PYTHON_CHECK! equ 0 (
-    echo ✓✓✓ PERFECT: Python 3.10.x found!
+    echo PERFECT: Python 3.10.x found!
 ) else (
-    echo ⚠ WARNING: Python 3.10 not found
+    echo WARNING: Python 3.10 not found
 )
 echo ========================================
 echo.
@@ -40,17 +40,9 @@ echo Checking Python version details...
 
 echo.
 echo Checking compatibility...
-!PYTHON_CMD! -c "import sys; major, minor = sys.version_info[:2]; print('✓ Compatible' if (major == 3 and 10 <= minor <= 13) else '⚠ May have compatibility issues')"
+!PYTHON_CMD! -c "import sys; major, minor = sys.version_info[:2]; print('Compatible' if (major == 3 and 10 <= minor <= 13) else 'May have compatibility issues')"
 
 echo.
-echo Recommended versions:
-echo   ✓ Python 3.10.x - Fully tested
-echo   ✓ Python 3.11.x - Fully tested
-echo   ⚠ Python 3.12.x - May work
-echo   ⚠ Python 3.13.x - May have issues
-echo   ✗ Python 3.14.x - Not supported yet
-echo.
-
 echo Checking if pip is available...
 !PYTHON_CMD! -m pip --version
 if !errorlevel! neq 0 (
@@ -70,23 +62,21 @@ if !errorlevel! neq 0 (
 )
 
 echo.
-echo ========================================
-echo Check Complete!
-echo ========================================
+echo All checks passed!
 echo.
 
 REM Suggest installation method
 !PYTHON_CMD! -c "import sys; exit(0 if (sys.version_info.major == 3 and 10 <= sys.version_info.minor <= 11) else 1)"
 if !errorlevel! equ 0 (
     echo ========================================
-    echo ✓ Your Python version is PERFECT!
+    echo Your Python version is PERFECT!
     echo ========================================
     echo.
     echo Recommended installation:
     echo   quick-install.bat
 ) else (
     echo ========================================
-    echo ⚠ Your Python version may have compatibility issues
+    echo Your Python version may have compatibility issues
     echo ========================================
     echo.
     echo Recommended actions:
@@ -96,7 +86,7 @@ if !errorlevel! equ 0 (
     echo 2. Or try minimal installation:
     echo    install-minimal.bat
     echo.
-    echo 3. Or use Docker ^(most reliable^):
+    echo 3. Or use Docker (most reliable):
     echo    docker-compose up -d
 )
 

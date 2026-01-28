@@ -24,7 +24,7 @@ if "!PYTHON_CMD!"=="" (
 )
 
 if !PYTHON_CHECK! equ 0 (
-    echo ✓ Using Python 3.10.x: !PYTHON_CMD!
+    echo Using Python 3.10.x: !PYTHON_CMD!
 ) else (
     echo ========================================
     echo WARNING: Python 3.10 not found!
@@ -59,36 +59,21 @@ if not exist venv (
 REM Activate virtual environment
 call venv\Scripts\activate.bat
 
-REM Install/update dependencies
+REM Check dependencies
 echo Checking dependencies...
-echo Installing packages (this may take a moment)...
-pip install -r requirements.txt
+python -c "import fastapi" 2>nul
 if %errorlevel% neq 0 (
-    echo.
-    echo Error installing dependencies. Trying alternative installation...
-    pip install fastapi uvicorn[standard] pydantic pydantic-settings sqlalchemy alembic aiosqlite scapy pandas numpy python-multipart python-jose[cryptography] passlib[bcrypt] python-json-logger prometheus-client pytest pytest-asyncio httpx black flake8 mypy jinja2 aiofiles python-dotenv schedule websockets
-)
-echo.
-
-REM Check for database
-if not exist bpsr_market.db (
-    echo Database not found. Starting setup...
-    python -m src.database.setup
-    echo.
-    
-    echo Would you like to import sample data? (Y/N^)
-    set /p choice=Choice: 
-    if /i "%choice%"=="Y" (
-        python scripts/import_sample_data.py
-        echo.
-    )
+    echo Dependencies not installed. Please run quick-install.bat first.
+    pause
+    exit /b 1
 )
 
-REM Start API server
+REM Start the API server
 echo Starting API server...
-echo Open your browser and navigate to http://localhost:8000
+echo.
+echo Server will be available at:
+echo   http://localhost:8000
+echo.
 echo Press Ctrl+C to stop the server
 echo.
 python -m src.api.main
-
-pause
