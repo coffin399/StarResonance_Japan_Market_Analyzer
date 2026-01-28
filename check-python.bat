@@ -6,24 +6,36 @@ echo Python Compatibility Check
 echo ========================================
 echo.
 
-python --version
-if %errorlevel% neq 0 (
-    echo ERROR: Python is not installed or not in PATH
-    echo.
-    echo Please install Python 3.10 or 3.11 from:
-    echo https://www.python.org/downloads/
-    echo.
-    pause
-    exit /b 1
+REM Find best Python version
+call find-python.bat
+if "%PYTHON_CMD%"=="" (
+    echo Searching for any Python installation...
+    python --version >nul 2>&1
+    if %errorlevel% neq 0 (
+        echo ERROR: Python is not installed or not in PATH
+        echo.
+        echo Please install Python 3.10 from:
+        echo https://www.python.org/downloads/release/python-31011/
+        echo.
+        echo Direct link (Windows 64-bit):
+        echo https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe
+        echo.
+        pause
+        exit /b 1
+    )
+    set "PYTHON_CMD=python"
 )
+
+echo Found Python:
+%PYTHON_CMD% --version
 
 echo.
 echo Checking Python version details...
-python -c "import sys; print(f'Version: {sys.version}'); print(f'Major: {sys.version_info.major}'); print(f'Minor: {sys.version_info.minor}'); print(f'Micro: {sys.version_info.micro}')"
+%PYTHON_CMD% -c "import sys; print(f'Version: {sys.version}'); print(f'Major: {sys.version_info.major}'); print(f'Minor: {sys.version_info.minor}'); print(f'Micro: {sys.version_info.micro}')"
 
 echo.
 echo Checking compatibility...
-python -c "import sys; major, minor = sys.version_info[:2]; print('✓ Compatible' if (major == 3 and 10 <= minor <= 13) else '⚠ May have compatibility issues')"
+%PYTHON_CMD% -c "import sys; major, minor = sys.version_info[:2]; print('✓ Compatible' if (major == 3 and 10 <= minor <= 13) else '⚠ May have compatibility issues')"
 
 echo.
 echo Recommended versions:
@@ -35,17 +47,17 @@ echo   ✗ Python 3.14.x - Not supported yet
 echo.
 
 echo Checking if pip is available...
-python -m pip --version
+%PYTHON_CMD% -m pip --version
 if %errorlevel% neq 0 (
     echo ERROR: pip is not available
-    echo Try: python -m ensurepip
+    echo Try: %PYTHON_CMD% -m ensurepip
     pause
     exit /b 1
 )
 
 echo.
 echo Checking if venv is available...
-python -m venv --help >nul 2>&1
+%PYTHON_CMD% -m venv --help >nul 2>&1
 if %errorlevel% neq 0 (
     echo ERROR: venv is not available
     pause
@@ -59,19 +71,28 @@ echo ========================================
 echo.
 
 REM Suggest installation method
-python -c "import sys; exit(0 if (sys.version_info.major == 3 and 10 <= sys.version_info.minor <= 11) else 1)"
+%PYTHON_CMD% -c "import sys; exit(0 if (sys.version_info.major == 3 and 10 <= sys.version_info.minor <= 11) else 1)"
 if %errorlevel% equ 0 (
-    echo Your Python version is perfect!
+    echo ========================================
+    echo ✓ Your Python version is PERFECT!
+    echo ========================================
     echo.
     echo Recommended installation:
     echo   quick-install.bat
 ) else (
-    echo Your Python version may have compatibility issues.
+    echo ========================================
+    echo ⚠ Your Python version may have compatibility issues
+    echo ========================================
     echo.
     echo Recommended actions:
-    echo 1. Install Python 3.10 or 3.11 from: https://www.python.org/downloads/
-    echo 2. Or try minimal installation: install-minimal.bat
-    echo 3. Or use Docker: docker-compose up -d
+    echo 1. Install Python 3.10.11 from:
+    echo    https://www.python.org/downloads/release/python-31011/
+    echo.
+    echo 2. Or try minimal installation:
+    echo    install-minimal.bat
+    echo.
+    echo 3. Or use Docker ^(most reliable^):
+    echo    docker-compose up -d
 )
 
 echo.

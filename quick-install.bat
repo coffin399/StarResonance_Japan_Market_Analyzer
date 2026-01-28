@@ -7,22 +7,27 @@ echo Quick Installation
 echo ========================================
 echo.
 
-REM Check Python
-python --version >nul 2>&1
-if %errorlevel% neq 0 (
-    echo ERROR: Python is not installed or not in PATH
-    echo Please install Python 3.10 or higher from https://www.python.org/
+REM Find best Python version (3.10 or 3.11)
+call find-python.bat
+if "%PYTHON_CMD%"=="" (
+    echo ERROR: Python 3.10 or 3.11 not found
+    echo.
+    echo Please install Python 3.10 from:
+    echo https://www.python.org/downloads/release/python-31011/
+    echo.
+    echo Recommended: Python 3.10.11 (Windows installer 64-bit)
     pause
     exit /b 1
 )
 
-echo Python found!
+echo Found compatible Python version!
+%PYTHON_CMD% --version
 echo.
 
 REM Create virtual environment
 if not exist venv (
-    echo Creating virtual environment...
-    python -m venv venv
+    echo Creating virtual environment with %PYTHON_CMD%...
+    %PYTHON_CMD% -m venv venv
     echo.
 )
 

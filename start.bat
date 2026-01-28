@@ -6,10 +6,26 @@ echo Star Resonance Market Analyzer
 echo ========================================
 echo.
 
+REM Find best Python version
+call find-python.bat
+if "%PYTHON_CMD%"=="" (
+    echo ERROR: Python 3.10 or 3.11 not found
+    echo.
+    echo Please install Python 3.10 from:
+    echo https://www.python.org/downloads/
+    echo.
+    pause
+    exit /b 1
+)
+
+echo Using: %PYTHON_CMD%
+%PYTHON_CMD% --version
+echo.
+
 REM Check for virtual environment
 if not exist venv (
-    echo Virtual environment not found. Starting setup...
-    python -m venv venv
+    echo Virtual environment not found. Creating with %PYTHON_CMD%...
+    %PYTHON_CMD% -m venv venv
     echo Virtual environment created.
     echo.
 )

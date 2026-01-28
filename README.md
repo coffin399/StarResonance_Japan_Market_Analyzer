@@ -38,12 +38,20 @@ StarResonance_Japan_Market_Analyzer/
 
 ### 最速インストール
 
-**ステップ1: Python バージョン確認**
+**ステップ1: Python 3.10 をインストール（推奨）**
+
+Python 3.10 がない場合は、こちらからダウンロード:
+- [Python 3.10.11 (Windows 64-bit)](https://www.python.org/ftp/python/3.10.11/python-3.10.11-amd64.exe) ⭐推奨
+- [Python 3.10.11 (公式ページ)](https://www.python.org/downloads/release/python-31011/)
+
+⚠️ インストール時に必ず "Add Python to PATH" をチェック！
+
+**ステップ2: Python バージョン確認**
 ```bat
 check-python.bat
 ```
 
-**ステップ2: インストール実行**
+**ステップ3: インストール実行**
 
 Python 3.10-3.11 の場合:
 ```bat
@@ -61,11 +69,14 @@ install-minimal.bat
 
 ### 必要な環境
 
-- **Python 3.10 または 3.11** (推奨)
+- **Python 3.10.x** ⭐ 最も推奨（すべてのパッケージが安定動作）
+  - Python 3.11.x も可
   - Python 3.12+ は一部パッケージで互換性問題あり
-  - Python 3.14+ は非対応
+  - Python 3.14+ は非対応（Pydantic ビルドエラー）
 - PostgreSQL 14+ (または SQLite - 開発用)
 - Wireshark (パケットキャプチャ用、オプション)
+
+**詳細なインストールガイド**: [PYTHON_INSTALL.md](PYTHON_INSTALL.md)
 
 ### インストール方法
 
