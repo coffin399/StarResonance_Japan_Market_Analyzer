@@ -147,35 +147,50 @@ ws.onmessage = (event) => {
 };
 ```
 
-### 方法2: Wiresharkで手動キャプチャ
+### 方法2: Wiresharkで手動キャプチャ（推奨）
 
-既存のpcapファイルを解析する場合。
+既存のpcapファイルを専用パーサーで解析します。
 
-#### 1. パケットキャプチャの設定
+#### 1. Wiresharkでキャプチャ
 
-Wiresharkでゲームトラフィックをキャプチャし、`.pcap`ファイルとして保存します。
-
-フィルタ例:
 ```
-tcp.port == [game_port] && ip.addr == [game_server_ip]
-```
-
-取引所パケットの識別:
-```
-Hex: 00 63 33 53 42 00
+1. Wiresharkを起動
+2. ネットワークインターフェースを選択
+3. キャプチャ開始
+4. ゲームで取引所を開く・操作
+5. キャプチャ停止
+6. File → Save As → capture.pcap
 ```
 
-#### 2. パケットの解析
+#### 2. 専用パーサーで解析
 
+**最も簡単な方法:**
+```bat
+# pcapファイルをドラッグ&ドロップ
+tools\parse-pcap.bat
+
+# または直接指定
+tools\parse-pcap.bat capture.pcap
+```
+
+**インタラクティブツール:**
+```bat
+tools\analyze-traffic.bat
+```
+
+**Python から直接:**
 ```python
-from src.packet_decoder import TradingCenterDecoder
+from tools.packet_parser import GamePacketParser
 
-# PcapファイルからTCパケットを解析
-decoder = TradingCenterDecoder('capture.pcap')
-trades = decoder.decode_trading_packets()
+parser = GamePacketParser('capture.pcap')
+items = parser.parse()
+parser.save_results()  # JSON出力
+```
 
-# データベースに保存
-decoder.save_to_database(trades)
+#### 3. データベースにインポート
+
+```bash
+python scripts\import_from_json.py parsed_items_20260128_123456.json
 ```
 
 ### 3. Web UIでデータを確認
