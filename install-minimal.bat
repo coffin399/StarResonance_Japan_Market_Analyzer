@@ -23,28 +23,33 @@ if "!PYTHON_CMD!"=="" (
 )
 
 if !PYTHON_CHECK! equ 0 (
+    echo ========================================
     echo ✓ Using Python 3.10.x: !PYTHON_CMD!
+    echo ========================================
+    !PYTHON_CMD! --version
+    echo.
 ) else (
-    echo WARNING: Python 3.10 not found, using: !PYTHON_CMD!
-)
-
-!PYTHON_CMD! --version
-echo.
-
-echo Checking Python version compatibility...
-!PYTHON_CMD! -c "import sys; exit(0 if sys.version_info < (3, 14) else 1)"
-if !errorlevel! neq 0 (
+    echo ========================================
+    echo WARNING: Python 3.10 not found
+    echo ========================================
+    echo Using: !PYTHON_CMD!
+    !PYTHON_CMD! --version
     echo.
-    echo WARNING: Python 3.14+ detected
-    echo Some packages may not work correctly
-    echo Recommended: Python 3.10 or 3.11
+    
+    echo Checking Python version compatibility...
+    !PYTHON_CMD! -c "import sys; exit(0 if sys.version_info < (3, 14) else 1)"
+    if !errorlevel! neq 0 (
+        echo.
+        echo WARNING: Python 3.14+ detected
+        echo Some packages may not work correctly
+        echo Recommended: Python 3.10 or 3.11
+        echo.
+        echo Continue anyway? (Y/N)
+        set /p choice=Choice: 
+        if /i not "!choice!"=="Y" exit /b 1
+    )
     echo.
-    echo Continue anyway? (Y/N)
-    set /p choice=Choice: 
-    if /i not "%choice%"=="Y" exit /b 1
 )
-
-echo.
 
 REM Create venv
 if not exist venv (
