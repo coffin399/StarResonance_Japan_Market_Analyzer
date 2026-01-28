@@ -1,209 +1,266 @@
-# StarResonance Japan Market Analyzer
+# Star Resonance Japan Market Analyzer
 
-> **⚠️ プロジェクト中止のお知らせ**
-> 
-> このプロジェクトは開発を中止しました。
-> 
-> **中止理由**: ゲームパケットの構造が複雑で、取引所データの抽出が技術的に困難であることが判明したため。
-> 
-> パケットキャプチャとゲームサーバー検出は実装されていますが、取引所データの正確な解析には至りませんでした。
-> 
-> このリポジトリは学習目的やアーカイブとして残しますが、実用的な機能は提供されません。
+ブループロトコル:スターレゾナンス 取引所解析ツール
 
----
+## 概要
 
-## 概要（開発中止）
+このツールは、ゲーム内の取引所データをパケット解析により取得し、市場価格の分析、損益計算、トレンド分析などを提供します。
 
-このツールは、WinDivertを使用してゲームパケットを傍受し、取引所のアイテム価格データを収集する予定でした。
-収集したデータを基に価格推移の分析や、将来的には損益計算機能を提供する予定でした。
+**重要**: このツールはパケット解析のみを行い、ゲームクライアントへの干渉や改変は一切行いません。
 
-## 特徴
+## 機能
 
-- 🚀 **リアルタイム価格取得**: WinDivertによるパケット傍受でゲーム内取引所価格を取得
-- 📊 **価格推移の可視化**: アイテムごとの価格変動をグラフで表示
-- 💰 **市場分析**: 取引傾向や価格統計の分析
-- 🌐 **将来機能**: Web APIを通じた損益計算サイトの構築予定
+- 📊 **市場価格分析**: リアルタイムの取引所データを取得・保存
+- 🔴 **リアルタイムキャプチャ**: ゲーム実行中にパケットを自動監視・記録
+- 💰 **損益計算**: 取引の利益率を自動計算
+- 📈 **価格履歴追跡**: アイテムごとの価格推移を記録
+- 🌐 **Web UI**: ブラウザから市場データを閲覧
+- 🤖 **REST API + WebSocket**: Discord Botなど外部ツールとの連携
 
-## 技術スタック
+## プロジェクト構成
 
-- **フレームワーク**: Tauri 2.0
-- **フロントエンド**: Svelte 5 / SvelteKit v2
-- **バックエンド**: Rust
-- **パケット傍受**: WinDivert
-- **データベース**: SQLite (ローカル) / PostgreSQL (将来のWeb API用)
+```
+StarResonance_Japan_Market_Analyzer/
+├── src/
+│   ├── packet_decoder/      # パケット解析モジュール
+│   ├── database/             # データベース関連
+│   ├── api/                  # REST API
+│   └── analyzer/             # 分析ツール
+├── web/                      # Webフロントエンド
+├── docs/                     # ドキュメント
+├── examples/                 # 使用例
+├── requirements.txt          # Python依存パッケージ
+└── docker-compose.yml        # Docker設定
+```
 
-## インスピレーション
+## クイックスタート（5分で試せる！）
 
-このプロジェクトは [BPSR Logs](https://github.com/winjwinj/bpsr-logs) にインスパイアされ、
-同様のパケット解析手法を使用しています。
+サンプルデータを使って、すぐに動作を確認できます。
 
-## 免責事項
-
-- このツールの使用は自己責任で行ってください
-- ゲームの利用規約を必ず確認してください
-- 運営の方針変更により使用できなくなる可能性があります
-
-## ライセンス
-
-GNU Affero General Public License v3.0 (AGPL-3.0)
-
-このプロジェクトはAGPL-3.0の下で公開されています。詳細は [LICENSE](LICENSE) を参照してください。
-
-### サードパーティライセンス
-
-- **WinDivert**: LGPL v3（動的リンクで使用）
-- 詳細: [LICENSE_NOTES.md](LICENSE_NOTES.md) および [src-tauri/THIRD_PARTY_LICENSES.md](src-tauri/THIRD_PARTY_LICENSES.md)
-
-### ライセンスの選択理由
-
-- オープンソースコミュニティへの貢献
-- 改変版のソース公開義務
-- 将来のWeb API提供に最適
-- WinDivert (LGPL) との互換性
-
-## 開発状況
-
-❌ **開発中止** ❌
-
-### 実装済み機能
-- [x] プロジェクト基本構造
-- [x] WinDivertパケット傍受機能
-- [x] ゲームサーバー検出
-- [x] TCP再組立ロジック
-- [x] 基本UI実装
-- [x] パケット内文字列検出
-
-### 未実装（中止）
-- [ ] パケットパーサー実装
-- [ ] 取引所データ抽出
-- [ ] データベース設計
-- [ ] 価格推移グラフ
-- [ ] 市場分析機能
-- [ ] Web API開発
-- [ ] 損益計算サイト
-
-### 技術的課題
-- ゲームパケットの暗号化/圧縮形式が不明
-- パケット構造の複雑さ（可変長フィールド、複数のパケットタイプ）
-- 取引所データの特定が困難
-
-## 📖 ドキュメント
-
-### ユーザー向け
-- **[クイックスタートガイド](QUICKSTART.md)** - 最速で始める方法
-- **[インストールガイド](INSTALLATION.md)** - 詳細なインストール手順とトラブルシューティング
-
-### 開発者向け
-- **[開発ガイド](docs/DEVELOPMENT.md)** - 開発環境のセットアップと開発ワークフロー
-- **[パケット解析ガイド](docs/PACKET_ANALYSIS.md)** - WinDivertとパケット解析の詳細
-- **[API設計書](docs/API_DESIGN.md)** - 将来のWeb APIの設計
-- **[ロードマップ](docs/ROADMAP.md)** - プロジェクトの今後の予定
-- **[コントリビューションガイド](CONTRIBUTING.md)** - プロジェクトへの貢献方法
-
-## 🚀 セットアップ（参考・学習用）
-
-> **注意**: このプロジェクトは開発中止しており、実用的な機能は提供されません。
-> コードは学習目的やWinDivertの使用例として参照できます。
-
-### 開発者向け（Windows）
-
-**バッチファイルで起動**
-
-```batch
+```bash
 # 1. リポジトリをクローン
 git clone https://github.com/yourusername/StarResonance_Japan_Market_Analyzer.git
 cd StarResonance_Japan_Market_Analyzer
 
-# 2. ダブルクリックで起動（自動的に管理者権限に昇格）
-start-dev-auto-admin.bat
+# 2. 仮想環境を作成
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
+
+# 3. 依存パッケージをインストール
+pip install -r requirements.txt
+
+# 4. データベースをセットアップ
+python -m src.database.setup
+
+# 5. サンプルデータをインポート（オプション）
+python scripts/import_sample_data.py
+
+# 6. APIサーバーを起動
+python -m src.api.main
 ```
 
-その他の便利なバッチファイル:
-- `build.bat` - リリースビルド
-- `run.bat` - ビルド済みアプリを実行
-- `clean.bat` - キャッシュクリア
+ブラウザで http://localhost:8000 にアクセスしてください！
 
-詳細: [BATCH_SCRIPTS.md](BATCH_SCRIPTS.md)
+## セットアップ
 
-### 手動セットアップ
+### 必要な環境
+
+- Python 3.10+
+- PostgreSQL 14+ (または SQLite - 開発用)
+- Wireshark (パケットキャプチャ用)
+
+### 本番環境のインストール
 
 ```bash
-# リポジトリのクローン
+# 1. リポジトリをクローン
 git clone https://github.com/yourusername/StarResonance_Japan_Market_Analyzer.git
 cd StarResonance_Japan_Market_Analyzer
 
-# 依存関係のインストール
-npm install
+# 2. 仮想環境を作成
+python -m venv venv
+venv\Scripts\activate  # Windows
+# source venv/bin/activate  # Linux/Mac
 
-# 開発モードで起動（管理者権限が必要）
-npm run tauri dev
+# 3. 依存パッケージをインストール
+pip install -r requirements.txt
 
-# ビルド
-npm run tauri build
+# 4. 環境変数を設定
+copy .env.example .env
+# .envファイルを編集してデータベース接続情報などを設定
+
+# 5. データベースをセットアップ
+python -m src.database.setup
+
+# 6. APIサーバーを起動
+python -m src.api.main
 ```
 
-詳細: [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md)
+### Dockerを使用する場合
 
-## WinDivertについて
+```bash
+# Docker Composeで起動
+docker-compose up -d
 
-このツールはWinDivert64.sysドライバーを使用します。
-一部のアンチウイルスソフトが誤検知する場合がありますが、コードはオープンソースで公開されています。
+# ログを確認
+docker-compose logs -f
 
-### 誤検知への対処
+# 停止
+docker-compose down
+```
 
-1. Windows Defenderの除外設定に追加
-2. プロジェクトフォルダ全体を信頼済みとして設定
+## 使い方
 
-## コントリビューション
+### 方法1: リアルタイムキャプチャ（推奨）
 
-プロジェクトへの貢献を歓迎します！
+ゲーム実行中に自動でパケットをキャプチャし、データベースに保存します。
 
-1. このリポジトリをフォーク
-2. フィーチャーブランチを作成 (`git checkout -b feature/amazing-feature`)
-3. 変更をコミット (`git commit -m 'Add amazing feature'`)
-4. ブランチにプッシュ (`git push origin feature/amazing-feature`)
-5. プルリクエストを作成
+#### Pythonスクリプトで起動
 
-## サポート
+```python
+python examples/realtime_capture_example.py
+```
 
-問題が発生した場合は、Issuesセクションで報告してください。
+#### API経由で制御
 
-## 当初の展望（未実現）
+```bash
+# キャプチャ開始
+curl -X POST http://localhost:8000/api/v1/realtime/start
 
-### Phase 1: デスクトップアプリ ❌
-- ローカルでの価格データ収集 → **中止**
-- 基本的な分析機能 → **未実装**
+# ステータス確認
+curl http://localhost:8000/api/v1/realtime/status
 
-### Phase 2: データ共有機能 ❌
-- ユーザー間でのデータ共有 → **中止**
-- コミュニティ価格データベース → **中止**
+# キャプチャ停止
+curl -X POST http://localhost:8000/api/v1/realtime/stop
+```
 
-### Phase 3: Web サービス ❌
-- オンライン損益計算サイト → **中止**
-- API提供 → **中止**
-- 高度な市場分析機能 → **中止**
+#### WebSocketでリアルタイム受信
 
-## FAQ
+```javascript
+const ws = new WebSocket('ws://localhost:8000/api/v1/realtime/ws');
 
-### Q: なぜ開発を中止したのですか？
-A: ゲームパケットの構造解析が想定以上に複雑で、取引所データの正確な抽出が技術的に困難だったためです。パケットの暗号化・圧縮形式の解明に多くの時間を要することが判明しました。
+ws.onmessage = (event) => {
+    const data = JSON.parse(event.data);
+    if (data.type === 'new_listings') {
+        console.log('New listings:', data.listings);
+    }
+};
+```
 
-### Q: コードは参考にできますか？
-A: はい。WinDivertの使用例、Tauriアプリケーション構造、TCPパケット再組立ロジックなどは学習目的で参照可能です。
+### 方法2: Wiresharkで手動キャプチャ
 
-### Q: 今後再開の可能性はありますか？
-A: 現時点では予定していません。ただし、ゲームパケット構造に関する新しい知見が得られた場合は検討する可能性があります。
+既存のpcapファイルを解析する場合。
 
-### Q: これは安全ですか？
-A: コードはオープンソースで公開されており、誰でも確認できます。WinDivertは正規のパケットキャプチャツールです。
+#### 1. パケットキャプチャの設定
 
-### Q: BANされませんか？
-A: このツールは実用的な機能を持たないため、使用によるリスクはほとんどありません。ただし、同様の手法を用いた開発を行う場合は自己責任でお願いします。
+Wiresharkでゲームトラフィックをキャプチャし、`.pcap`ファイルとして保存します。
 
-## 連絡先
+フィルタ例:
+```
+tcp.port == [game_port] && ip.addr == [game_server_ip]
+```
 
-プロジェクトに関する質問や提案がある場合は、Issuesまでお願いします。
+取引所パケットの識別:
+```
+Hex: 00 63 33 53 42 00
+```
 
----
+#### 2. パケットの解析
 
-**注意**: このツールはファンメイドであり、ゲーム運営とは一切関係ありません。
+```python
+from src.packet_decoder import TradingCenterDecoder
+
+# PcapファイルからTCパケットを解析
+decoder = TradingCenterDecoder('capture.pcap')
+trades = decoder.decode_trading_packets()
+
+# データベースに保存
+decoder.save_to_database(trades)
+```
+
+### 3. Web UIでデータを確認
+
+APIサーバーが起動していれば、以下のURLでアクセス:
+
+```
+http://localhost:8000
+```
+
+### 4. APIエンドポイント
+
+```bash
+# 全アイテムの最新価格を取得
+GET /api/v1/items
+
+# 特定アイテムの価格履歴
+GET /api/v1/items/{item_id}/history
+
+# 損益計算
+POST /api/v1/calculate-profit
+{
+  "buy_price": 1000,
+  "sell_price": 1500,
+  "quantity": 10
+}
+```
+
+## Cloudflare Tunnel での公開
+
+ポート開放せずに外部公開する場合:
+
+```bash
+# 1. Cloudflare Tunnelをインストール
+# https://developers.cloudflare.com/cloudflare-one/connections/connect-apps/install-and-setup/
+
+# 2. トンネルを作成
+cloudflared tunnel create bpsr-market
+
+# 3. トンネルを起動
+cloudflared tunnel --config config.yml run
+```
+
+詳細は [docs/cloudflare-tunnel.md](docs/cloudflare-tunnel.md) を参照してください。
+
+## Discord Bot連携
+
+APIを使用してDiscord Botから市場データを取得できます:
+
+```python
+import requests
+
+# 最新のアイテム価格を取得
+response = requests.get('https://your-tunnel.trycloudflare.com/api/v1/items')
+items = response.json()
+```
+
+## ドキュメント
+
+詳細なドキュメントは `docs/` フォルダにあります:
+
+- [はじめに](docs/GETTING_STARTED.md) - 初心者向けガイド
+- [リアルタイムキャプチャ](docs/realtime-capture.md) - ⭐ リアルタイムパケット監視（推奨）
+- [APIリファレンス](docs/api-reference.md) - API仕様
+- [パケット解析ガイド](docs/packet-analysis.md) - パケットキャプチャと解析
+- [Cloudflare Tunnel設定](docs/cloudflare-tunnel.md) - 外部公開の方法
+- [アーキテクチャ](docs/ARCHITECTURE.md) - システム設計
+- [コントリビューションガイド](CONTRIBUTING.md) - 貢献方法
+
+## 参考資料
+
+このプロジェクトは以下のリポジトリを参考にしています:
+
+- [JordieB/bpsr_labs](https://github.com/JordieB/bpsr_labs) - パケットデコーダーの実装参考
+- [winjwinj/bpsr-logs](https://github.com/winjwinj/bpsr-logs) - リアルタイムパケット監視の実装参考（WinDivert使用）
+
+## ライセンス
+
+MIT License
+
+## 免責事項
+
+このツールは教育・研究目的で提供されています。使用は自己責任でお願いします。
+ゲーム運営の規約を遵守し、適切に使用してください。
+
+## 貢献
+
+プルリクエストを歓迎します！バグ報告や機能要望はIssueで受け付けています。

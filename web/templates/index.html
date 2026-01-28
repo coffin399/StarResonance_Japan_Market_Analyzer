@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Star Resonance Market Analyzer</title>
+    <link rel="stylesheet" href="/static/css/style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <h1 class="logo">⭐ Star Resonance Market Analyzer</h1>
+            <ul class="nav-links">
+                <li><a href="#overview">概要</a></li>
+                <li><a href="#listings">出品情報</a></li>
+                <li><a href="#calculator">損益計算</a></li>
+                <li><a href="/api/docs" target="_blank">API Docs</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <main class="container">
+        <!-- 市場概要 -->
+        <section id="overview" class="section">
+            <h2>📊 市場概要</h2>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-label">アクティブな出品数</div>
+                    <div class="stat-value" id="active-listings">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">ユニークアイテム数</div>
+                    <div class="stat-value" id="unique-items">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">総出品額</div>
+                    <div class="stat-value" id="total-value">-</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">24時間の新規出品</div>
+                    <div class="stat-value" id="new-listings">-</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- トレンドアイテム -->
+        <section class="section">
+            <h2>🔥 トレンドアイテム</h2>
+            <div class="table-container">
+                <table id="trending-table">
+                    <thead>
+                        <tr>
+                            <th>アイテム名</th>
+                            <th>出品数</th>
+                            <th>最安値</th>
+                            <th>最高値</th>
+                            <th>平均価格</th>
+                        </tr>
+                    </thead>
+                    <tbody id="trending-body">
+                        <tr><td colspan="5" class="loading">読み込み中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 最新の出品 -->
+        <section id="listings" class="section">
+            <h2>📝 最新の出品情報</h2>
+            <div class="search-bar">
+                <input type="text" id="search-input" placeholder="アイテム名で検索...">
+                <button onclick="searchItems()">検索</button>
+            </div>
+            <div class="table-container">
+                <table id="listings-table">
+                    <thead>
+                        <tr>
+                            <th>アイテム名</th>
+                            <th>数量</th>
+                            <th>価格</th>
+                            <th>単価</th>
+                            <th>出品者</th>
+                            <th>キャプチャ日時</th>
+                        </tr>
+                    </thead>
+                    <tbody id="listings-body">
+                        <tr><td colspan="6" class="loading">読み込み中...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- 損益計算ツール -->
+        <section id="calculator" class="section">
+            <h2>💰 損益計算ツール</h2>
+            <div class="calculator-container">
+                <div class="calculator-form">
+                    <div class="form-group">
+                        <label for="buy-price">購入価格:</label>
+                        <input type="number" id="buy-price" placeholder="1000" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="sell-price">販売価格:</label>
+                        <input type="number" id="sell-price" placeholder="1500" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="quantity">数量:</label>
+                        <input type="number" id="quantity" placeholder="1" value="1" min="1">
+                    </div>
+                    <div class="form-group">
+                        <label for="fee-rate">手数料率 (%):</label>
+                        <input type="number" id="fee-rate" placeholder="5" value="5" min="0" max="100" step="0.1">
+                    </div>
+                    <div class="form-group checkbox">
+                        <input type="checkbox" id="monthly-card">
+                        <label for="monthly-card">マンスリーカード所持 (-20%手数料)</label>
+                    </div>
+                    <button onclick="calculateProfit()" class="btn-primary">計算する</button>
+                </div>
+                <div class="calculator-result" id="calculator-result">
+                    <p class="info-text">左のフォームに入力して計算してください</p>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Star Resonance Market Analyzer | 
+               <a href="https://github.com/yourusername/StarResonance_Japan_Market_Analyzer" target="_blank">GitHub</a>
+            </p>
+            <p class="disclaimer">このツールはパケット解析のみを行い、ゲームクライアントへの干渉は一切行いません。</p>
+        </div>
+    </footer>
+
+    <script src="/static/js/main.js"></script>
+</body>
+</html>

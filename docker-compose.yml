@@ -1,0 +1,58 @@
+version: '3.8'
+
+services:
+  # PostgreSQLデータベース
+  postgres:
+    image: postgres:16-alpine
+    container_name: bpsr_market_db
+    environment:
+      POSTGRES_USER: bpsr_user
+      POSTGRES_PASSWORD: bpsr_password
+      POSTGRES_DB: bpsr_market
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U bpsr_user"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # FastAPI アプリケーション
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: bpsr_market_api
+    environment:
+      - DATABASE_URL=postgresql://bpsr_user:bpsr_password@postgres:5432/bpsr_market
+      - API_HOST=0.0.0.0
+      - API_PORT=8000
+      - API_DEBUG=false
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./pcaps:/app/pcaps
+      - ./logs:/app/logs
+    restart: unless-stopped
+
+  # Cloudflare Tunnel (オプション)
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: bpsr_market_tunnel
+    command: tunnel --no-autoupdate run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - api
+    restart: unless-stopped
+    profiles:
+      - production
+
+volumes:
+  postgres_data:
+    driver: local

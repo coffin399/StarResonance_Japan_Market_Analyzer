@@ -1,70 +1,50 @@
-# Logs
-logs
-*.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+ENV/
+*.egg-info/
+dist/
+build/
+*.egg
 
-# Node modules
-node_modules
-dist
-dist-ssr
-*.local
+# Environment
+.env
+.env.local
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
-.DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
-# Tauri
-/target
-/src-tauri/target
-/src-tauri/WixTools
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
 
 # Database
 *.db
-*.db-shm
-*.db-wal
 *.sqlite
 *.sqlite3
 
-# Environment files
-.env
-.env.local
-.env.production
+# Logs
+logs/
+*.log
 
-# Build outputs
-/build
-/.svelte-kit
+# Pcap files
+pcaps/
+*.pcap
+*.pcapng
 
-# WinDivert files - これらは必要なのでコミットする
-# *.sys
-# WinDivert*.dll
-
-# Temporary files
-*.tmp
-*.temp
-
-# OS files
+# OS
+.DS_Store
 Thumbs.db
-desktop.ini
 
-# Package manager
-package-lock.json
-yarn.lock
-pnpm-lock.yaml
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
 
-# Rust
-**/*.rs.bk
-*.pdb
-
-# Tauri updater
-/bundles
+# Cloudflare
+config.yml
+*.pem
