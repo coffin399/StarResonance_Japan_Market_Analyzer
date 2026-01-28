@@ -38,11 +38,22 @@ StarResonance_Japan_Market_Analyzer/
 
 ### 最速インストール
 
+**ステップ1: Python バージョン確認**
+```bat
+check-python.bat
+```
+
+**ステップ2: インストール実行**
+
+Python 3.10-3.11 の場合:
 ```bat
 quick-install.bat
 ```
 
-このスクリプトを実行するだけで、すべてのセットアップが完了します！
+Python 3.12+ または エラーが出る場合:
+```bat
+install-minimal.bat
+```
 
 ブラウザで http://localhost:8000 にアクセスしてください！
 
@@ -50,7 +61,9 @@ quick-install.bat
 
 ### 必要な環境
 
-- Python 3.10+
+- **Python 3.10 または 3.11** (推奨)
+  - Python 3.12+ は一部パッケージで互換性問題あり
+  - Python 3.14+ は非対応
 - PostgreSQL 14+ (または SQLite - 開発用)
 - Wireshark (パケットキャプチャ用、オプション)
 

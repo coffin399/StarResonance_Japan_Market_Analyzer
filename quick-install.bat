@@ -36,11 +36,32 @@ echo.
 
 REM Install core dependencies first
 echo Installing core dependencies...
-pip install --no-cache-dir sqlalchemy==2.0.25 fastapi==0.109.0 uvicorn[standard]==0.27.0 pydantic==2.5.3
+echo.
+echo Note: If you see "Failed building wheel for pydantic-core",
+echo this is normal and we'll install the binary version instead.
+echo.
+
+REM Try to install with binary wheels (no build required)
+pip install --only-binary :all: sqlalchemy==2.0.25 fastapi==0.109.0 uvicorn==0.27.0 pydantic==2.5.3 2>nul
 if %errorlevel% neq 0 (
-    echo Failed to install core dependencies
-    pause
-    exit /b 1
+    echo Binary installation failed, trying without pydantic...
+    pip install --no-cache-dir sqlalchemy==2.0.25 fastapi==0.109.0 uvicorn==0.27.0
+    
+    REM Install compatible pydantic version
+    echo.
+    echo Installing compatible pydantic version...
+    pip install pydantic --prefer-binary
+    
+    if %errorlevel% neq 0 (
+        echo Failed to install core dependencies
+        echo.
+        echo Troubleshooting:
+        echo 1. Your Python version may be too new
+        echo 2. Try: python --version
+        echo 3. Recommended: Python 3.10 or 3.11
+        pause
+        exit /b 1
+    )
 )
 echo Core dependencies installed!
 echo.

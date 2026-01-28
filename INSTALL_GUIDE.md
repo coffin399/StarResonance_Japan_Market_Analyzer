@@ -101,6 +101,27 @@ python -m src.api.main
 pip install sqlalchemy fastapi uvicorn[standard] pydantic alembic aiosqlite pandas numpy jinja2 python-dotenv websockets
 ```
 
+### Error: `pydantic-core` build failed
+
+**原因**: Python のバージョンが新しすぎる（3.14+）、または Rust コンパイラがない。
+
+**解決策1: Python バージョンを確認**
+```bash
+check-python.bat
+```
+
+推奨: Python 3.10 または 3.11
+
+**解決策2: 最小限インストール**
+```bash
+install-minimal.bat
+```
+
+**解決策3: 古いバージョンの pydantic を使用**
+```bash
+pip install "pydantic<2.0"
+```
+
 ### Error: `ModuleNotFoundError: No module named 'sqlalchemy'`
 
 **原因**: 依存パッケージがインストールされていません。
