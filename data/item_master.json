@@ -1,21 +1,469 @@
 {
   "items": {
-    "22": {"name": "不明なアイテム#22", "category": "素材"},
-    "26": {"name": "不明なアイテム#26", "category": "素材"},
-    "29": {"name": "不明なアイテム#29", "category": "素材"},
-    "59": {"name": "不明なアイテム#59", "category": "素材"},
-    "79": {"name": "不明なアイテム#79", "category": "素材"},
-    "85": {"name": "不明なアイテム#85", "category": "素材"},
-    "86": {"name": "不明なアイテム#86", "category": "素材"},
-    "88": {"name": "不明なアイテム#88", "category": "素材"},
-    "94": {"name": "不明なアイテム#94", "category": "素材"},
-    "100": {"name": "不明なアイテム#100", "category": "素材"},
-    "106": {"name": "不明なアイテム#106", "category": "素材"},
-    "109": {"name": "不明なアイテム#109", "category": "素材"},
-    "121": {"name": "不明なアイテム#121", "category": "素材"},
-    "132": {"name": "不明なアイテム#132", "category": "素材"},
-    "257": {"name": "不明なアイテム#257", "category": "装備"},
-    "1401": {"name": "不明なアイテム#1401", "category": "装備"}
+    "1": {
+      "name": "Judgment Blade- Scythe Long Blade",
+      "category": "weapon"
+    },
+    "2": {
+      "name": "Frostjade Staff - Magic Wand",
+      "category": "weapon"
+    },
+    "3": {
+      "name": "Scourgefire Axe - Battle Axe",
+      "category": "weapon"
+    },
+    "4": {
+      "name": "Justice Lance- Lance",
+      "category": "weapon"
+    },
+    "5": {
+      "name": "Fatewood Ring - Magic Ring",
+      "category": "weapon"
+    },
+    "8": {
+      "name": "Thunder Flash - Hand Cannon",
+      "category": "weapon"
+    },
+    "9": {
+      "name": "Sandward - Blade",
+      "category": "weapon"
+    },
+    "10": {
+      "name": "(Temporary) Rorola",
+      "category": "weapon"
+    },
+    "11": {
+      "name": "Bow",
+      "category": "weapon"
+    },
+    "12": {
+      "name": "Frostjade Staff - Magic Wand",
+      "category": "weapon"
+    },
+    "201": {
+      "name": "EXP",
+      "category": "skill"
+    },
+    "202": {
+      "name": "EXP (blessing)",
+      "category": "skill"
+    },
+    "301": {
+      "name": "Season Pass EXP",
+      "category": "skill"
+    },
+    "302": {
+      "name": "Season Pass EXP (Not counted toward weekly limit)",
+      "category": "skill"
+    },
+    "10001": {
+      "name": "Season 1 Points",
+      "category": "currency"
+    },
+    "10002": {
+      "name": "Luno",
+      "category": "currency"
+    },
+    "10003": {
+      "name": "Rose Orb",
+      "category": "currency"
+    },
+    "10004": {
+      "name": "Friendship Points",
+      "category": "currency"
+    },
+    "10005": {
+      "name": "Rose Orb (Bound)",
+      "category": "currency"
+    },
+    "10006": {
+      "name": "Honor Coin",
+      "category": "currency"
+    },
+    "10007": {
+      "name": "Supply Points",
+      "category": "currency"
+    },
+    "10008": {
+      "name": "Luno (Bound)",
+      "category": "currency"
+    },
+    "10009": {
+      "name": "Meow Coin",
+      "category": "currency"
+    },
+    "10010": {
+      "name": "Homestead Coins",
+      "category": "currency"
+    },
+    "10011": {
+      "name": "Reclaim Token",
+      "category": "currency"
+    },
+    "10013": {
+      "name": "Rose Orb",
+      "category": "currency"
+    },
+    "11001": {
+      "name": "Silver Star Badge",
+      "category": "currency"
+    },
+    "11002": {
+      "name": "Adept's Badge",
+      "category": "currency"
+    },
+    "20001": {
+      "name": "Energy Points",
+      "category": "currency"
+    },
+    "20002": {
+      "name": "Monster Hunt EXP",
+      "category": "currency"
+    },
+    "20003": {
+      "name": "Focus",
+      "category": "currency"
+    },
+    "20006": {
+      "name": "Emblem Power Parts",
+      "category": "currency"
+    },
+    "20010": {
+      "name": "World Boss Crusade Points",
+      "category": "currency"
+    },
+    "20011": {
+      "name": "Meowlux Points",
+      "category": "currency"
+    },
+    "30001": {
+      "name": "Talent Points",
+      "category": "currency"
+    },
+    "31000": {
+      "name": "Life Skills Mastery",
+      "category": "skill"
+    },
+    "31001": {
+      "name": "Botany EXP",
+      "category": "skill"
+    },
+    "31002": {
+      "name": "Botany Mastery",
+      "category": "skill"
+    },
+    "31011": {
+      "name": "Mineralogy EXP",
+      "category": "skill"
+    },
+    "31012": {
+      "name": "Mineralogy Mastery",
+      "category": "skill"
+    },
+    "31021": {
+      "name": "Gemology EXP",
+      "category": "skill"
+    },
+    "31022": {
+      "name": "Gemology Mastery",
+      "category": "skill"
+    },
+    "31041": {
+      "name": "Culinary EXP",
+      "category": "skill"
+    },
+    "31042": {
+      "name": "Culinary Mastery",
+      "category": "skill"
+    },
+    "31051": {
+      "name": "Alchemy EXP",
+      "category": "skill"
+    },
+    "31052": {
+      "name": "Alchemy Mastery",
+      "category": "skill"
+    },
+    "31061": {
+      "name": "Smelting EXP",
+      "category": "skill"
+    },
+    "31062": {
+      "name": "Smelting Mastery",
+      "category": "skill"
+    },
+    "31071": {
+      "name": "Gemcrafting EXP",
+      "category": "skill"
+    },
+    "31072": {
+      "name": "Gemcrafting Mastery",
+      "category": "skill"
+    },
+    "31081": {
+      "name": "Artisanry EXP",
+      "category": "skill"
+    },
+    "31082": {
+      "name": "Artisanry Mastery",
+      "category": "skill"
+    },
+    "31091": {
+      "name": "Weaving EXP",
+      "category": "skill"
+    },
+    "1010001": {
+      "name": "Recovery Potion",
+      "category": "consumable"
+    },
+    "1010002": {
+      "name": "Sweet Dew Berry - Level 2",
+      "category": "consumable"
+    },
+    "1010011": {
+      "name": "Canned Fish Lv.1",
+      "category": "consumable"
+    },
+    "1010012": {
+      "name": "Canned Fish Lv.2",
+      "category": "consumable"
+    },
+    "1010021": {
+      "name": "Grilled Fish Lv.1",
+      "category": "consumable"
+    },
+    "1010022": {
+      "name": "Grilled Fish Lv.2",
+      "category": "consumable"
+    },
+    "1010031": {
+      "name": "Jarred Meat Lv.1",
+      "category": "consumable"
+    },
+    "1010032": {
+      "name": "Jarred Meat Lv.2",
+      "category": "consumable"
+    },
+    "1010041": {
+      "name": "Blossom Dumpling Lv.1",
+      "category": "consumable"
+    },
+    "1010042": {
+      "name": "Blossom Dumpling Lv.2",
+      "category": "consumable"
+    },
+    "1010051": {
+      "name": "Honeyshroom Soup Lv.1",
+      "category": "consumable"
+    },
+    "1010052": {
+      "name": "Honeyshroom Soup Lv.2",
+      "category": "consumable"
+    },
+    "1010061": {
+      "name": "Shroom Jelly Lv.1",
+      "category": "consumable"
+    },
+    "1010062": {
+      "name": "Shroom Jelly Lv.2",
+      "category": "consumable"
+    },
+    "1010071": {
+      "name": "Yoyo Fruit Tea Lv.1",
+      "category": "consumable"
+    },
+    "1010072": {
+      "name": "Yoyo Fruit Tea Lv.2",
+      "category": "consumable"
+    },
+    "1010081": {
+      "name": "Sweet Dew Berry - Lv.1",
+      "category": "consumable"
+    },
+    "1010082": {
+      "name": "Sweet Dew Berry - Level 2",
+      "category": "consumable"
+    },
+    "1010083": {
+      "name": "Sweet Dew Berry - Sample Pack",
+      "category": "consumable"
+    },
+    "1011012": {
+      "name": "Lavafish Stew Lv.1",
+      "category": "consumable"
+    },
+    "1011013": {
+      "name": "Lavafish Stew Lv.2",
+      "category": "consumable"
+    },
+    "1011022": {
+      "name": "Glazefin Chop Lv.1",
+      "category": "consumable"
+    },
+    "1011023": {
+      "name": "Glazefin Chop Lv.2",
+      "category": "consumable"
+    },
+    "1011032": {
+      "name": "Astelpot Duo Lv.1",
+      "category": "consumable"
+    },
+    "1011033": {
+      "name": "Astelpot Duo Lv.2",
+      "category": "consumable"
+    },
+    "1011042": {
+      "name": "Astelshroom Pot Lv.1",
+      "category": "consumable"
+    },
+    "1011043": {
+      "name": "Astelshroom Pot Lv.2",
+      "category": "consumable"
+    },
+    "1011052": {
+      "name": "Veilfruit Stew Lv.1",
+      "category": "consumable"
+    },
+    "1011053": {
+      "name": "Veilfruit Stew Lv.2",
+      "category": "consumable"
+    },
+    "1011062": {
+      "name": "Aromafish Can Lv.1",
+      "category": "consumable"
+    },
+    "1011063": {
+      "name": "Aromafish Can Lv.2",
+      "category": "consumable"
+    },
+    "1011072": {
+      "name": "Stuffshroom Puff Lv.1",
+      "category": "consumable"
+    },
+    "1011073": {
+      "name": "Stuffshroom Puff Lv.2",
+      "category": "consumable"
+    },
+    "1011082": {
+      "name": "Buttery Chunks Lv.1",
+      "category": "consumable"
+    },
+    "1011083": {
+      "name": "Buttery Chunks Lv.2",
+      "category": "consumable"
+    },
+    "1011092": {
+      "name": "Charfruit Roast Lv.1",
+      "category": "consumable"
+    },
+    "1011093": {
+      "name": "Charfruit Roast Lv.2",
+      "category": "consumable"
+    },
+    "1011102": {
+      "name": "Plainmeat Soup Lv.1",
+      "category": "consumable"
+    },
+    "1011103": {
+      "name": "Plainmeat Soup Lv.2",
+      "category": "consumable"
+    },
+    "1011112": {
+      "name": "Simple Asterleeds Pot Lv.1",
+      "category": "consumable"
+    },
+    "1011113": {
+      "name": "Simple Asterleeds Pot Lv.2",
+      "category": "consumable"
+    },
+    "1011122": {
+      "name": "Nine-Flavor Meat Lv.1",
+      "category": "consumable"
+    },
+    "1011123": {
+      "name": "Nine-Flavor Meat Lv.2",
+      "category": "consumable"
+    },
+    "1011132": {
+      "name": "Mushroom Sauce Lv.1",
+      "category": "consumable"
+    },
+    "1011133": {
+      "name": "Mushroom Sauce Lv.2",
+      "category": "consumable"
+    },
+    "1011142": {
+      "name": "Milky Umm - Lv.1",
+      "category": "consumable"
+    },
+    "1011143": {
+      "name": "Milky Umm - Lv.2",
+      "category": "consumable"
+    },
+    "22": {
+      "name": "Unknown Item #22",
+      "category": "misc"
+    },
+    "26": {
+      "name": "Unknown Item #26",
+      "category": "misc"
+    },
+    "29": {
+      "name": "Unknown Item #29",
+      "category": "misc"
+    },
+    "59": {
+      "name": "Unknown Item #59",
+      "category": "misc"
+    },
+    "79": {
+      "name": "Unknown Item #79",
+      "category": "misc"
+    },
+    "85": {
+      "name": "Unknown Item #85",
+      "category": "misc"
+    },
+    "86": {
+      "name": "Unknown Item #86",
+      "category": "misc"
+    },
+    "88": {
+      "name": "Unknown Item #88",
+      "category": "misc"
+    },
+    "94": {
+      "name": "Unknown Item #94",
+      "category": "misc"
+    },
+    "100": {
+      "name": "Unknown Item #100",
+      "category": "misc"
+    },
+    "106": {
+      "name": "Unknown Item #106",
+      "category": "misc"
+    },
+    "109": {
+      "name": "Unknown Item #109",
+      "category": "misc"
+    },
+    "121": {
+      "name": "Unknown Item #121",
+      "category": "misc"
+    },
+    "132": {
+      "name": "Unknown Item #132",
+      "category": "misc"
+    },
+    "257": {
+      "name": "Unknown Item #257",
+      "category": "misc"
+    },
+    "1401": {
+      "name": "Unknown Item #1401",
+      "category": "misc"
+    }
   },
-  "_comment": "このファイルは手動でアイテム名を追加できます。ゲーム内で確認したアイテムIDと名前を追加してください。"
+  "_comment": "Item master data for Blue Protocol: Star Resonance. Manually add item IDs and names confirmed in-game."
 }

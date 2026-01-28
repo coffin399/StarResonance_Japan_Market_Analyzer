@@ -1,9 +1,15 @@
+# Item Name Enrichment System
 # アイテム名の追加方法
 
-## 概要
+## Overview / 概要
 
-パケットから抽出できるのは **アイテムID、数量、価格** のみです。
+**Packets contain only item IDs, quantities, and prices.**
+Item names are NOT included in the packet data and must be mapped manually from a master data file.
+
+**パケットから抽出できるのは アイテムID、数量、価格 のみです。**
 アイテム名はパケットに含まれていないため、手動でマスターデータに登録する必要があります。
+
+✅ **Already Pre-populated:** The `data/item_master.json` file contains 116+ common items based on game data.
 
 ## 手順
 

@@ -34,6 +34,13 @@ StarResonance_Japan_Market_Analyzer/
 └── quick-install.bat             # ⭐ クイックインストール
 ```
 
+## 📚 Documentation / ドキュメント
+
+- **[WORKFLOW_GUIDE.md](WORKFLOW_GUIDE.md)** - Complete workflow from packet capture to analysis / パケットキャプチャから分析までの完全なワークフロー
+- **[README_ITEM_NAMES.md](README_ITEM_NAMES.md)** - Item name enrichment system / アイテム名付与システム
+- **[INSTALL_GUIDE.md](INSTALL_GUIDE.md)** - Installation troubleshooting / インストールトラブルシューティング
+- **[PYTHON_INSTALL.md](PYTHON_INSTALL.md)** - Python installation guide / Python インストールガイド
+
 ## クイックスタート（5分で試せる！）
 
 ### 最速インストール
