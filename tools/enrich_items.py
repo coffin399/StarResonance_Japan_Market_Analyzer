@@ -41,15 +41,32 @@ def enrich_items(input_file: str, output_file: str = None, master_file: str = 'd
     enriched = 0
     for item in items:
         item_id_str = str(item['item_id'])
+        
         if item_id_str in item_master:
             master_data = item_master[item_id_str]
-            item['item_name'] = master_data.get('name', f'Item #{item_id_str}')
-            if 'category' in master_data:
-                item['category'] = master_data['category']
+            item_name = master_data.get('name', f'Item #{item_id_str}')
+            
+            # 新形式 (analysis フィールドあり)
+            if 'analysis' in item:
+                item['analysis']['item_name'] = item_name
+                if 'category' in master_data:
+                    item['analysis']['category'] = master_data['category']
+            # 旧形式 (直接フィールド)
+            else:
+                item['item_name'] = item_name
+                if 'category' in master_data:
+                    item['category'] = master_data['category']
+            
             enriched += 1
         else:
-            if not item['item_name']:
-                item['item_name'] = f'Unknown Item #{item_id_str}'
+            # 新形式
+            if 'analysis' in item:
+                if not item['analysis'].get('item_name'):
+                    item['analysis']['item_name'] = f'Unknown Item #{item_id_str}'
+            # 旧形式
+            else:
+                if not item.get('item_name'):
+                    item['item_name'] = f'Unknown Item #{item_id_str}'
     
     # 出力ファイル名決定
     if output_file is None:

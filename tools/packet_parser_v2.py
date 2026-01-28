@@ -176,18 +176,20 @@ class GamePacketParserV2:
         return items
     
     def _parse_item_data(self, data: bytes) -> Optional[Dict]:
-        """アイテムデータをパース"""
+        """アイテムデータをパース (詳細フォーマット)"""
         try:
             parser = ProtobufParser()
             offset = 0
             
-            item_data = {
-                'listing_id': 0,
-                'item_id': 0,
-                'item_name': '',
-                'quantity': 0,
-                'price': 0,
-            }
+            # 収集した全データ
+            raw_fields = {}
+            listing_id = 0
+            item_id = 0
+            quantity = 0
+            price = 0
+            timestamp = 0
+            guid = ""
+            bind_flag = False
             
             # Protobufフィールドを解析
             while offset < len(data) - 4:
@@ -199,43 +201,79 @@ class GamePacketParserV2:
                 field_number, wire_type, value = field
                 offset = new_offset
                 
+                # フィールド情報を保存
+                raw_fields[f"field_{field_number}"] = {
+                    "wire_type": wire_type,
+                    "value": value if not isinstance(value, bytes) else value.hex() if len(value) < 50 else f"{value[:50].hex()}..."
+                }
+                
                 # フィールド番号に基づいて値を割り当て
                 if wire_type == 0:  # Varint (IDや数量)
                     if 10 <= value <= 999999:  # アイテムIDの範囲
-                        if item_data['item_id'] == 0:
-                            item_data['item_id'] = value
+                        if item_id == 0:
+                            item_id = value
                     elif 1 <= value <= 9999:  # 数量の範囲
-                        if item_data['quantity'] == 0:
-                            item_data['quantity'] = value
+                        if quantity == 0:
+                            quantity = value
                     elif value > 1000000:  # 価格やリスティングID
-                        if item_data['listing_id'] == 0:
-                            item_data['listing_id'] = value
-                        elif item_data['price'] == 0:
-                            item_data['price'] = value
+                        if listing_id == 0:
+                            listing_id = value
+                        elif price == 0:
+                            price = value
+                    
+                    # タイムスタンプ (Unix timestamp)
+                    if 1700000000 <= value <= 2000000000:
+                        if timestamp == 0:
+                            timestamp = value
                 
                 elif wire_type == 1:  # 64-bit (価格やタイムスタンプ)
                     if 1000 <= value <= 999999999:
-                        if item_data['price'] == 0:
-                            item_data['price'] = value
+                        if price == 0:
+                            price = value
                 
-                elif wire_type == 2:  # Length-delimited (文字列)
+                elif wire_type == 2:  # Length-delimited (文字列やGUID)
                     if isinstance(value, bytes):
-                        try:
-                            text = value.decode('utf-8', errors='strict')
-                            # 日本語文字を含むか
-                            if any(0x3000 <= ord(c) <= 0x9FFF for c in text):
-                                if not item_data['item_name']:
-                                    item_data['item_name'] = text
-                        except:
-                            pass
+                        # GUIDパターン (UUID)
+                        if len(value) == 36 or (16 <= len(value) <= 40):
+                            try:
+                                text = value.decode('utf-8', errors='strict')
+                                if '-' in text and len(text) >= 32:
+                                    guid = text
+                            except:
+                                pass
             
             # 妥当性チェック
-            if (item_data['item_id'] > 0 and 
-                item_data['quantity'] > 0 and 
-                item_data['price'] > 0):
+            if item_id > 0 and quantity > 0 and price > 0:
+                unit_price = price // quantity
+                estimated_tax = int(price * 0.05)  # 5% tax (推定)
                 
-                item_data['unit_price'] = item_data['price'] // item_data['quantity']
-                return item_data
+                # 詳細フォーマットで返す
+                return {
+                    "price_luno": price,
+                    "quantity": quantity,
+                    "item_id": item_id,
+                    "metadata": {
+                        "frame_offset": 0,  # パケット内のオフセット (後で設定可能)
+                        "server_sequence": listing_id if listing_id > 0 else None,
+                        "raw_entry": {
+                            "price": price,
+                            "num": quantity,
+                            "itemInfo": {
+                                "configId": item_id,
+                                "count": quantity,
+                                "bindFlag": bind_flag
+                            },
+                            "guid": guid if guid else None,
+                            "noticeTime": timestamp if timestamp > 0 else None
+                        }
+                    },
+                    "analysis": {
+                        "item_name": None,  # エンリッチメント時に追加
+                        "unit_price_luno": unit_price,
+                        "estimated_tax": estimated_tax,
+                        "source": "packet_parser_v2"
+                    }
+                }
         
         except Exception as e:
             logger.debug(f"Error parsing item data: {e}")
