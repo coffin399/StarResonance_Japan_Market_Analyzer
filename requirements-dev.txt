@@ -1,0 +1,4 @@
+# Development dependencies (SQLite only)
+-r requirements.txt
+
+# No PostgreSQL needed for development

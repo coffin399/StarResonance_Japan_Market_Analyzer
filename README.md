@@ -1,12 +1,12 @@
 # Star Resonance Japan Market Analyzer
 
-ブループロトコル:スターレゾナンス 取引所解析ツール
+ブループロトコル:スターレゾナンス の取引所解析ツール
 
 ## 概要
 
 このツールは、ゲーム内の取引所データをパケット解析により取得し、市場価格の分析、損益計算、トレンド分析などを提供します。
 
-**重要**: このツールはパケット解析のみを行い、ゲームクライアントへの干渉や改変は一切行いません。
+**重要**: このツールはパケット解析のみを行い、ゲームクライアントへの干渉や改変は一切行いません。運営からパケット解析は不正ツールに該当しないとの判断を得ています。
 
 ## 機能
 
@@ -21,34 +21,64 @@
 
 ```
 StarResonance_Japan_Market_Analyzer/
-├── src/
-│   ├── packet_decoder/      # パケット解析モジュール
-│   ├── database/             # データベース関連
-│   ├── api/                  # REST API
-│   └── analyzer/             # 分析ツール
-├── web/                      # Webフロントエンド
-├── docs/                     # ドキュメント
-├── examples/                 # 使用例
-├── requirements.txt          # Python依存パッケージ
-└── docker-compose.yml        # Docker設定
+├── src/                          # ソースコード
+│   ├── packet_decoder/           # パケット解析
+│   ├── database/                 # データベース
+│   ├── analyzer/                 # 分析ツール
+│   └── api/                      # REST API
+├── web/                          # Webフロントエンド
+├── docs/                         # ドキュメント
+├── examples/                     # 使用例
+├── scripts/                      # ユーティリティスクリプト
+├── requirements.txt              # Python依存パッケージ
+└── quick-install.bat             # ⭐ クイックインストール
 ```
 
 ## クイックスタート（5分で試せる！）
 
-サンプルデータを使って、すぐに動作を確認できます。
+### 最速インストール
+
+```bat
+quick-install.bat
+```
+
+このスクリプトを実行するだけで、すべてのセットアップが完了します！
+
+ブラウザで http://localhost:8000 にアクセスしてください！
+
+## セットアップ
+
+### 必要な環境
+
+- Python 3.10+
+- PostgreSQL 14+ (または SQLite - 開発用)
+- Wireshark (パケットキャプチャ用、オプション)
+
+### インストール方法
+
+#### 方法1: クイックインストール（推奨）
+
+```bash
+quick-install.bat
+```
+
+#### 方法2: 手動インストール
 
 ```bash
 # 1. リポジトリをクローン
-git clone https://github.com/yourusername/StarResonance_Japan_Market_Analyzer.git
+git clone https://github.com/coffin399/StarResonance_Japan_Market_Analyzer.git
 cd StarResonance_Japan_Market_Analyzer
 
 # 2. 仮想環境を作成
 python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
+venv\Scripts\activate
 
 # 3. 依存パッケージをインストール
+pip install --upgrade pip
 pip install -r requirements.txt
+
+# エラーが出る場合は個別にインストール
+pip install sqlalchemy fastapi uvicorn[standard] pydantic alembic aiosqlite jinja2 python-dotenv websockets
 
 # 4. データベースをセットアップ
 python -m src.database.setup
@@ -60,54 +90,24 @@ python scripts/import_sample_data.py
 python -m src.api.main
 ```
 
-ブラウザで http://localhost:8000 にアクセスしてください！
-
-## セットアップ
-
-### 必要な環境
-
-- Python 3.10+
-- PostgreSQL 14+ (または SQLite - 開発用)
-- Wireshark (パケットキャプチャ用)
-
-### 本番環境のインストール
+#### 方法3: Dockerを使用する場合
 
 ```bash
-# 1. リポジトリをクローン
-git clone https://github.com/yourusername/StarResonance_Japan_Market_Analyzer.git
-cd StarResonance_Japan_Market_Analyzer
-
-# 2. 仮想環境を作成
-python -m venv venv
-venv\Scripts\activate  # Windows
-# source venv/bin/activate  # Linux/Mac
-
-# 3. 依存パッケージをインストール
-pip install -r requirements.txt
-
-# 4. 環境変数を設定
-copy .env.example .env
-# .envファイルを編集してデータベース接続情報などを設定
-
-# 5. データベースをセットアップ
-python -m src.database.setup
-
-# 6. APIサーバーを起動
-python -m src.api.main
-```
-
-### Dockerを使用する場合
-
-```bash
-# Docker Composeで起動
 docker-compose up -d
-
-# ログを確認
-docker-compose logs -f
-
-# 停止
-docker-compose down
 ```
+
+### トラブルシューティング
+
+**`psycopg2-binary` インストールエラー**
+
+PostgreSQLは本番環境用です。開発環境ではSQLiteを使用するため不要です。
+
+```bash
+# PostgreSQL なしでインストール
+pip install sqlalchemy fastapi uvicorn[standard] pydantic alembic aiosqlite jinja2 python-dotenv websockets
+```
+
+詳細は [INSTALL_GUIDE.md](INSTALL_GUIDE.md) を参照してください。
 
 ## 使い方
 
@@ -237,6 +237,7 @@ items = response.json()
 
 詳細なドキュメントは `docs/` フォルダにあります:
 
+- [インストールガイド](INSTALL_GUIDE.md) - ⭐ トラブルシューティング付き
 - [はじめに](docs/GETTING_STARTED.md) - 初心者向けガイド
 - [リアルタイムキャプチャ](docs/realtime-capture.md) - ⭐ リアルタイムパケット監視（推奨）
 - [APIリファレンス](docs/api-reference.md) - API仕様
