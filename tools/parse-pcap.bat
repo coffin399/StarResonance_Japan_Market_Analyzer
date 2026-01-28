@@ -31,47 +31,26 @@ if not exist "%~1" (
     exit /b 1
 )
 
-REM Activate virtual environment first (REQUIRED)
+REM Activate virtual environment (REQUIRED)
 if exist ..\venv\Scripts\activate.bat (
     call ..\venv\Scripts\activate.bat
-    set "USE_VENV=1"
 ) else if exist venv\Scripts\activate.bat (
     call venv\Scripts\activate.bat
-    set "USE_VENV=1"
 ) else (
     echo ========================================
     echo ERROR: Virtual environment not found!
     echo ========================================
     echo.
-    echo Please run quick-install.bat first to set up the environment.
-    echo This tool requires Python dependencies.
+    echo Please run quick-install.bat first.
     echo.
     pause
     exit /b 1
 )
 
-REM Find best Python version (3.10 preferred)
-if exist ..\find-python.bat (
-    call ..\find-python.bat
-) else if exist find-python.bat (
-    call find-python.bat
-) else (
-    set "PYTHON_CMD=python"
-)
-
-if "%PYTHON_CMD%"=="" (
-    set "PYTHON_CMD=python"
-)
-
 REM Run the parser
 echo Parsing file: %~1
 echo.
-
-if "%USE_VENV%"=="1" (
-    python tools\packet_parser.py "%~1"
-) else (
-    %PYTHON_CMD% tools\packet_parser.py "%~1"
-)
+python tools\packet_parser.py "%~1"
 
 REM Check result
 if %errorlevel% equ 0 (
