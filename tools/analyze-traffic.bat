@@ -7,6 +7,29 @@ echo Game Traffic Analyzer
 echo ========================================
 echo.
 
+REM Activate virtual environment first (REQUIRED for scapy)
+if exist ..\venv\Scripts\activate.bat (
+    call ..\venv\Scripts\activate.bat
+    set "USE_VENV=1"
+    echo Virtual environment activated
+    echo.
+) else if exist venv\Scripts\activate.bat (
+    call venv\Scripts\activate.bat
+    set "USE_VENV=1"
+    echo Virtual environment activated
+    echo.
+) else (
+    echo ========================================
+    echo ERROR: Virtual environment not found!
+    echo ========================================
+    echo.
+    echo Please run quick-install.bat first to set up the environment.
+    echo This tool requires scapy and other dependencies.
+    echo.
+    pause
+    exit /b 1
+)
+
 REM Find best Python version (3.10 preferred)
 if exist ..\find-python.bat (
     call ..\find-python.bat
@@ -18,21 +41,6 @@ if exist ..\find-python.bat (
 
 if "%PYTHON_CMD%"=="" (
     set "PYTHON_CMD=python"
-)
-
-REM Activate virtual environment
-if exist venv\Scripts\activate.bat (
-    call venv\Scripts\activate.bat
-    set "USE_VENV=1"
-) else if exist ..\venv\Scripts\activate.bat (
-    call ..\venv\Scripts\activate.bat
-    set "USE_VENV=1"
-) else (
-    echo Warning: Virtual environment not found
-    echo Using: %PYTHON_CMD%
-    echo Please run quick-install.bat for best experience
-    echo.
-    set "USE_VENV=0"
 )
 
 echo This tool will help you analyze game traffic to find trading center packets.
