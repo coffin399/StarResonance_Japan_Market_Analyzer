@@ -21,51 +21,36 @@ Item master data is sourced from the excellent [JordieB/bpsr_labs](https://githu
 
 ## 手順
 
-### 1. パケットを解析
+### 1. パケットを解析（自動エンリッチメント）
 
 ```bat
 tools\parse-pcap-v2.bat capture.pcap
 ```
 
-これで `parsed_items_YYYYMMDD_HHMMSS.json` が生成されます。
+これで：
+- ✅ パケットをパース
+- ✅ 自動的にアイテム名を付与
+- ✅ 未知のアイテムをリスト表示
+- ✅ `parsed_items_YYYYMMDD_HHMMSS.json` が生成されます（名前付き！）
 
-### 2. アイテム名を付与
+**これだけで完了！** 別途エンリッチメントを実行する必要はありません。
 
-```bat
-tools\enrich-items.bat parsed_items_20260128_123456.json
-```
+### 2. マスターデータにアイテム名を追加（必要に応じて）
 
-これで以下が生成されます：
-- `parsed_items_20260128_123456_enriched.json` - 名前付きデータ
-- 未知のアイテムIDのリスト（コンソールに表示）
-
-### 3. マスターデータにアイテム名を追加
-
-`data/item_master.json` を編集：
+未知のアイテムが表示されたら、`data/item_master.json` を編集：
 
 ```json
 {
-  "items": {
-    "85": {
-      "name": "鉄鉱石",
-      "category": "素材"
-    },
-    "100": {
-      "name": "魔法の結晶",
-      "category": "素材"
-    },
-    "1401": {
-      "name": "伝説の剣",
-      "category": "武器"
-    }
-  }
+  "85": "鉄鉱石",
+  "100": "魔法の結晶",
+  "1401": "伝説の剣"
 }
 ```
 
-### 4. 再度エンリッチメント実行
+### 3. 再度パース実行
 
 ```bat
-tools\enrich-items.bat parsed_items_20260128_123456.json
+tools\parse-pcap-v2.bat capture.pcap
 ```
 
 今度は正しいアイテム名が付与されます！

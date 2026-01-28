@@ -19,17 +19,10 @@ tools\parse-pcap-v2.bat capture.pcap
 ```
 
 **Output:**
-- `parsed_items_YYYYMMDD_HHMMSS.json` - Extracted item data
+- `parsed_items_YYYYMMDD_HHMMSS.json` - Extracted item data with names already included!
+- Console shows enrichment statistics and unknown item IDs
 
-### 3. Enrich with Item Names / アイテム名を付与
-
-```bat
-tools\enrich-items.bat parsed_items_YYYYMMDD_HHMMSS.json
-```
-
-**Output:**
-- `parsed_items_YYYYMMDD_HHMMSS_enriched.json` - Data with item names
-- Console will show unknown item IDs
+**Auto-enrichment included!** No separate step needed.
 
 ### 4. Import to Database / データベースにインポート
 
@@ -182,7 +175,7 @@ tools\enrich-items.bat parsed_items_20260128_123456.json
 ## Step 5: Database Import / データベースへのインポート
 
 ```bat
-python scripts\import_from_json.py parsed_items_20260128_123456_enriched.json
+python scripts\import_from_json.py parsed_items_20260128_123456.json
 ```
 
 **What it does:**

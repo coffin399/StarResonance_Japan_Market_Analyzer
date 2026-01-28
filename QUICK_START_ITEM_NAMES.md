@@ -4,13 +4,10 @@
 ## TL;DR
 
 ```bat
-# 1. Parse packets
+# 1. Parse packets (auto-enrichment included!)
 tools\parse-pcap-v2.bat capture.pcap
 
-# 2. Add item names
-tools\enrich-items.bat parsed_items_20260128_123456.json
-
-# 3. Done! Check the *_enriched.json file
+# 2. Done! Check the parsed_items_*.json file (names already added!)
 ```
 
 ---
@@ -64,34 +61,31 @@ tools\parse-pcap-v2.bat your_capture.pcap
 
 Output: `parsed_items_YYYYMMDD_HHMMSS.json`
 
-### Step 2: Enrich with Item Names
+### Step 2: Results Are Auto-Enriched!
 
-```bat
-tools\enrich-items.bat parsed_items_20260128_123456.json
+**The parser automatically enriches items!**
+
+Output already includes item names from `data/item_master.json`:
+
+```json
+{
+  "item_id": 10002,
+  "item_name": "Luno",
+  "category": "currency",
+  "price": 5000,
+  "quantity": 100
+}
 ```
 
-**What happens:**
-1. Reads `data/item_master.json`
-2. Matches item IDs
-3. Adds names and categories
-4. Creates `*_enriched.json` file
-5. Shows unknown item IDs
-
-**Example Output:**
+**Console shows unknown items:**
 
 ```
 ================================================================================
-Enrichment Complete
+Unknown items found: 7
 ================================================================================
-Input:  parsed_items_20260128_123456.json
-Output: parsed_items_20260128_123456_enriched.json
-Total items: 22
-Enriched: 15 ✅
-Unknown: 7 ⚠️
-
-Unknown Item IDs (add these to data/item_master.json):
-  "85": {"name": "Item name here", "category": "material"},
-  "121": {"name": "Item name here", "category": "material"},
+Add these to data/item_master.json:
+  "85": "Item Name Here",
+  "121": "Item Name Here",
 ```
 
 ### Step 3: Add Unknown Items (Optional)
@@ -100,22 +94,14 @@ Open `data/item_master.json` and add discovered items:
 
 ```json
 {
-  "items": {
-    "85": {
-      "name": "Iron Ore",
-      "category": "material"
-    },
-    "121": {
-      "name": "Magic Crystal",
-      "category": "material"
-    }
-  }
+  "85": "Iron Ore",
+  "121": "Magic Crystal"
 }
 ```
 
-Then re-run enrichment:
+Then re-parse:
 ```bat
-tools\enrich-items.bat parsed_items_20260128_123456.json
+tools\parse-pcap-v2.bat capture.pcap
 ```
 
 Now those items will have proper names!
