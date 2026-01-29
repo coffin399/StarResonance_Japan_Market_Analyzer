@@ -1,8 +1,8 @@
 # Star Resonance Japan Market Analyzer
 
 ブループロトコル:スターレゾナンス の取引所解析ツール
-#⚠️開発中⚠️
-#⚠️Under development⚠️
+# ⚠️開発中⚠️
+# ⚠️Under development⚠️
 
 ## 概要
 
